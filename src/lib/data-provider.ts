@@ -9,8 +9,7 @@ import type {
   DashboardStats,
   WineStatus,
 } from "@/types/dual";
-import { isDualConfigured } from "./env";
-import { getDualClient } from "./dual-client";
+import { isDualConfigured, getDualClient } from "./dual-client";
 import { DEMO_WINES, DEMO_ACTIONS, DEMO_STATS } from "./demo-data";
 import { v4 as uuidv4 } from "uuid";
 
@@ -206,23 +205,30 @@ class DemoDataProvider implements DataProvider {
 // ─── DUAL API Provider ───
 
 class DualDataProvider implements DataProvider {
-  private client = getDualClient();
-
   async listWines(): Promise<Wine[]> {
-    return this.client.listWines();
+    const client = getDualClient();
+    const result = await client.objects.listObjects({ limit: 100 });
+    return result?.data || result || [];
   }
 
   async getWine(id: string): Promise<Wine | null> {
     try {
-      return await this.client.getWine(id);
+      const client = getDualClient();
+      return await client.objects.getObject(id);
     } catch {
       return null;
     }
   }
 
   async mintWine(data: WineData): Promise<Wine> {
-    const config = await import("./env").then((m) => m.getConfig());
-    return this.client.mintWine(config.dualTemplateId, data as unknown as Record<string, unknown>);
+    const client = getDualClient();
+    const templateId = process.env.DUAL_TEMPLATE_ID || '';
+    const result = await client.ebus.executeAction({
+      actionType: 'MINT',
+      templateId,
+      properties: data as unknown as Record<string, unknown>,
+    });
+    return result;
   }
 
   async updateWineStatus(): Promise<Wine | null> {
@@ -231,82 +237,65 @@ class DualDataProvider implements DataProvider {
   }
 
   async executeAction(wineId: string, type: ActionType, params?: Record<string, unknown>): Promise<Action> {
-    return this.client.executeAction(wineId, type, params);
+    const client = getDualClient();
+    return client.ebus.executeAction({ objectId: wineId, actionType: type, ...params });
   }
 
   async getAction(id: string): Promise<Action | null> {
     try {
-      return await this.client.getAction(id);
+      const client = getDualClient();
+      return await client.ebus.getAction(id);
     } catch {
       return null;
     }
   }
 
   async getWineActions(wineId: string): Promise<Action[]> {
-    return this.client.getWineActions(wineId);
+    const client = getDualClient();
+    const result = await client.objects.getObjectActivity(wineId);
+    return result?.data || result || [];
   }
 
   async listActions(): Promise<Action[]> {
-    const wines = await this.client.listWines();
-    const allActions: Action[] = [];
-    for (const wine of wines) {
-      const actions = await this.client.getWineActions(wine.id);
-      allActions.push(...actions);
-    }
-    return allActions.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    const client = getDualClient();
+    const result = await client.ebus.listActions({ limit: 100 });
+    return (result?.data || result || []).sort(
+      (a: Action, b: Action) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
   }
 
   async getTemplate(id: string): Promise<Template | null> {
     try {
-      return await this.client.getTemplate(id);
+      const client = getDualClient();
+      return await client.templates.getTemplate(id);
     } catch {
       return null;
     }
   }
 
   async listTemplates(): Promise<Template[]> {
-    return this.client.listTemplates();
+    const client = getDualClient();
+    const result = await client.templates.listTemplates({ limit: 100 });
+    return result?.data || result || [];
   }
 
   async getOrganization(id: string): Promise<Organization | null> {
     try {
-      return await this.client.getOrganization(id);
+      const client = getDualClient();
+      return await client.organizations.getOrganization(id);
     } catch {
       return null;
     }
   }
 
   async getDashboardStats(): Promise<DashboardStats> {
-    const wines = await this.client.listWines();
-    const totalValue = wines.reduce((sum, w) => sum + (w.wineData?.currentValue ?? 0), 0);
-    const regions: Record<string, number> = {};
-    const valueByType: Record<string, number> = {};
-    wines.forEach((w) => {
-      const r = w.wineData?.region ?? "Unknown";
-      regions[r] = (regions[r] ?? 0) + 1;
-      const t = w.wineData?.type ?? "red";
-      valueByType[t] = (valueByType[t] ?? 0) + (w.wineData?.currentValue ?? 0);
-    });
-    return {
-      totalWines: wines.length,
-      totalValue,
-      totalActions: 0,
-      mintedThisMonth: wines.filter((w) => {
-        const d = new Date(w.createdAt);
-        const now = new Date();
-        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-      }).length,
-      activeListings: wines.filter((w) => w.status === "listed").length,
-      recentSales: wines.filter((w) => w.status === "sold").length,
-      topRegions: Object.entries(regions)
-        .map(([region, count]) => ({ region, count }))
-        .sort((a, b) => b.count - a.count)
-        .slice(0, 5),
-      valueByType: Object.entries(valueByType).map(([type, value]) => ({
-        type: type as any,
-        value,
-      })),
-    };
+    try {
+      const client = getDualClient();
+      const stats = await client.indexer.getPublicStats();
+      return stats;
+    } catch {
+      return DEMO_STATS;
+    }
   }
 }
 
