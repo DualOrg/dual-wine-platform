@@ -208,7 +208,7 @@ class DualDataProvider implements DataProvider {
   async listWines(): Promise<Wine[]> {
     const client = getDualClient();
     const result = await client.objects.listObjects({ limit: 100 });
-    return result?.data || result || [];
+    return result?.objects || result?.actions || result?.activity || result?.data || [];
   }
 
   async getWine(id: string): Promise<Wine | null> {
@@ -253,13 +253,13 @@ class DualDataProvider implements DataProvider {
   async getWineActions(wineId: string): Promise<Action[]> {
     const client = getDualClient();
     const result = await client.objects.getObjectActivity(wineId);
-    return result?.data || result || [];
+    return result?.objects || result?.actions || result?.activity || result?.data || [];
   }
 
   async listActions(): Promise<Action[]> {
     const client = getDualClient();
     const result = await client.ebus.listActions({ limit: 100 });
-    return (result?.data || result || []).sort(
+    return (result?.objects || result?.actions || result?.activity || result?.data || []).sort(
       (a: Action, b: Action) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
   }
@@ -276,7 +276,7 @@ class DualDataProvider implements DataProvider {
   async listTemplates(): Promise<Template[]> {
     const client = getDualClient();
     const result = await client.templates.listTemplates({ limit: 100 });
-    return result?.data || result || [];
+    return result?.objects || result?.actions || result?.activity || result?.data || [];
   }
 
   async getOrganization(id: string): Promise<Organization | null> {
