@@ -9,8 +9,7 @@ export { DualClient, DualConfig, DualError };
 
 /** Check if DUAL SDK is configured with real credentials */
 export function isDualConfigured(): boolean {
-  return process.env.NEXT_PUBLIC_DUAL_CONFIGURED === 'true'
-    && !!process.env.DUAL_API_TOKEN;
+  return !!(process.env.DUAL_API_KEY || process.env.DUAL_API_TOKEN);
 }
 
 let client: DualClient | null = null;
@@ -19,8 +18,9 @@ let client: DualClient | null = null;
 export function getDualClient(): DualClient {
   if (!client) {
     client = new DualClient({
-      token: process.env.DUAL_API_TOKEN || '',
-      baseUrl: process.env.NEXT_PUBLIC_DUAL_API_URL || 'https://blockv-labs.io',
+      token: process.env.DUAL_API_TOKEN || undefined,
+      apiKey: process.env.DUAL_API_KEY || undefined,
+      baseUrl: process.env.NEXT_PUBLIC_DUAL_API_URL || 'https://gateway-48587430648.europe-west6.run.app',
       timeout: 30000,
       retry: { maxAttempts: 3, backoffMs: 1000 },
     });

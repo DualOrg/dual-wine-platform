@@ -6,6 +6,7 @@
 
 export interface DualConfig {
   token?: string;
+  apiKey?: string;
   baseUrl?: string;
   timeout?: number;
   fetch?: typeof fetch;
@@ -22,13 +23,15 @@ export class DualError extends Error {
 class HttpClient {
   private baseUrl: string;
   private token?: string;
+  private apiKey?: string;
   private timeout: number;
   private fetchImpl: typeof fetch;
   private maxRetries: number;
   private backoffMs: number;
   constructor(config: DualConfig = {}) {
-    this.baseUrl = config.baseUrl || 'https://blockv-labs.io';
+    this.baseUrl = config.baseUrl || 'https://gateway-48587430648.europe-west6.run.app';
     this.token = config.token;
+    this.apiKey = config.apiKey;
     this.timeout = config.timeout || 30000;
     this.fetchImpl = config.fetch || fetch;
     this.maxRetries = config.retry?.maxAttempts || 3;
@@ -48,6 +51,7 @@ class HttpClient {
     if (options?.query) { const p = new URLSearchParams(); Object.entries(options.query).forEach(([k, v]) => { if (v !== undefined && v !== null) p.append(k, String(v)); }); const qs = p.toString(); if (qs) url += '?' + qs; }
     const headers: Record<string, string> = { 'Content-Type': 'application/json', ...options?.headers };
     if (this.token) headers.Authorization = 'Bearer ' + this.token;
+    if (this.apiKey) headers['X-Api-Key'] = this.apiKey;
     const controller = new AbortController();
     const t = setTimeout(() => controller.abort(), this.timeout);
     try {
