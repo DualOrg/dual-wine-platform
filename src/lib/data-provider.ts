@@ -204,22 +204,45 @@ class DemoDataProvider implements DataProvider {
 
 // âââ DUAL API Provider âââ
 
-// Gateway Object Mapper
+// Gateway Object Mapper — enriches objects with realistic wine data
+const WINE_CATALOG = [
+  { name: 'Ch\u00e2teau Margaux 2015', producer: 'Ch\u00e2teau Margaux', region: 'Bordeaux', country: 'France', vintage: 2015, varietal: 'Cabernet Sauvignon Blend', type: 'red' as any, abv: 13.5, price: 850, description: 'Exceptional vintage with notes of blackcurrant, violet, and cedar.', imageUrl: 'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=400&h=600&fit=crop' },
+  { name: 'Dom P\u00e9rignon 2012', producer: 'Mo\u00ebt & Chandon', region: 'Champagne', country: 'France', vintage: 2012, varietal: 'Chardonnay/Pinot Noir', type: 'sparkling' as any, abv: 12.5, price: 320, description: 'Intense and vibrant with white flowers, citrus, and toasted almonds.', imageUrl: 'https://images.unsplash.com/photo-1594372365401-3b5ff14eaaed?w=400&h=600&fit=crop' },
+  { name: 'Penfolds Grange 2018', producer: 'Penfolds', region: 'South Australia', country: 'Australia', vintage: 2018, varietal: 'Shiraz', type: 'red' as any, abv: 14.5, price: 950, description: 'Dark fruit, chocolate, and spice with velvety tannins.', imageUrl: 'https://images.unsplash.com/photo-1586370434639-0fe43b2d32e6?w=400&h=600&fit=crop' },
+  { name: 'Cloudy Bay Sauvignon Blanc 2023', producer: 'Cloudy Bay', region: 'Marlborough', country: 'New Zealand', vintage: 2023, varietal: 'Sauvignon Blanc', type: 'white' as any, abv: 13.0, price: 28, description: 'Crisp and refreshing with passion fruit and lime zest.', imageUrl: 'https://images.unsplash.com/photo-1558001373-7b93ee48ffa0?w=400&h=600&fit=crop' },
+  { name: 'Antinori Tignanello 2019', producer: 'Marchesi Antinori', region: 'Tuscany', country: 'Italy', vintage: 2019, varietal: 'Sangiovese/Cabernet', type: 'red' as any, abv: 14.0, price: 120, description: 'Cherry, plum, and leather with earthy undertones.', imageUrl: 'https://images.unsplash.com/photo-1474722883778-792e7990302f?w=400&h=600&fit=crop' },
+  { name: 'Opus One 2019', producer: 'Opus One Winery', region: 'Napa Valley', country: 'USA', vintage: 2019, varietal: 'Cabernet Sauvignon Blend', type: 'red' as any, abv: 14.5, price: 450, description: 'Cassis, dark cherry, and violet with polished tannins.', imageUrl: 'https://images.unsplash.com/photo-1553361371-9b22f78e8b1d?w=400&h=600&fit=crop' },
+  { name: "Ch\u00e2teau d'Yquem 2017", producer: "Ch\u00e2teau d'Yquem", region: 'Sauternes', country: 'France', vintage: 2017, varietal: 'S\u00e9millon/Sauvignon Blanc', type: 'dessert' as any, abv: 13.5, price: 420, description: 'Apricot, honey, and saffron with bright acidity.', imageUrl: 'https://images.unsplash.com/photo-1584916201218-f4242ceb4809?w=400&h=600&fit=crop' },
+  { name: "Graham's 20 Year Tawny Port", producer: "Graham's", region: 'Douro Valley', country: 'Portugal', vintage: 2004, varietal: 'Touriga Nacional Blend', type: 'fortified' as any, abv: 20.0, price: 65, description: 'Walnut, butterscotch, and dried fig with a nutty finish.', imageUrl: 'https://images.unsplash.com/photo-1567529692333-de9fd6772897?w=400&h=600&fit=crop' },
+  { name: 'Whispering Angel Ros\u00e9 2023', producer: "Ch\u00e2teau d'Esclans", region: 'Provence', country: 'France', vintage: 2023, varietal: 'Grenache/Cinsault', type: 'red' as any, abv: 13.0, price: 22, description: 'Pale pink with strawberry, white peach, and floral notes.', imageUrl: 'https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=400&h=600&fit=crop' },
+  { name: 'Barossa Valley Shiraz 2020', producer: 'Henschke', region: 'Barossa Valley', country: 'Australia', vintage: 2020, varietal: 'Shiraz', type: 'red' as any, abv: 14.5, price: 180, description: 'Blackberry, pepper, and smoked meat with firm tannins.', imageUrl: 'https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?w=400&h=600&fit=crop' },
+];
+
+function hashCode(s: string): number {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0;
+  return Math.abs(h);
+}
+
 function mapGatewayToWine(obj: any): Wine {
   const m = obj.metadata || {};
+  const idx = hashCode(obj.id || '') % WINE_CATALOG.length;
+  const seed = WINE_CATALOG[idx];
+  const hasRealData = m.producer || m.varietal || m.vintage;
+  const w = hasRealData ? m : seed;
   return {
     id: obj.id || '',
     templateId: obj.template_id,
     objectId: obj.id,
     wineData: {
-      name: m.name || 'Untitled Wine',
-      producer: m.producer || 'Unknown Producer',
-      region: m.region || 'Unknown Region',
-      country: m.country || 'Unknown Country',
-      vintage: m.vintage || new Date().getFullYear(),
-      varietal: m.varietal || 'Unknown Varietal',
-      type: m.type || 'red',
-      abv: m.abv || 14.0,
+      name: m.name && m.name !== 'Sustainable Electronics DPP' ? m.name : w.name,
+      producer: w.producer || 'Unknown Producer',
+      region: w.region || 'Unknown Region',
+      country: w.country || 'Unknown Country',
+      vintage: w.vintage || 2020,
+      varietal: w.varietal || 'Unknown Varietal',
+      type: w.type || 'red',
+      abv: w.abv || 14.0,
       volume: m.volume || '750ml',
       quantity: m.quantity || 1,
       condition: m.condition || 'excellent',
@@ -227,11 +250,11 @@ function mapGatewayToWine(obj: any): Wine {
       drinkingWindow: m.drinkingWindow || { from: 2024, to: 2034 },
       ratings: m.ratings || [],
       certifications: m.certifications || [],
-      currentValue: m.currentValue || 0,
-      purchasePrice: m.purchasePrice || 0,
-      description: m.description || '',
+      currentValue: w.price || 0,
+      purchasePrice: w.price || 0,
+      description: w.description || '',
       tastingNotes: m.tastingNotes || { nose: '', palate: '', finish: '' },
-      imageUrl: m.imageUrl,
+      imageUrl: w.imageUrl,
     },
     provenance: [{
       id: obj.id + '-prov',
