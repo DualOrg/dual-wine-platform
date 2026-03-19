@@ -277,7 +277,7 @@ export default function WineDetailPage() {
                 Blockchain Verification
               </h4>
               <p className="text-xs text-slate-300 leading-relaxed">
-                All token data is cryptographically verified on the DUAL Network and indexed on BLOCKv
+                All token data is cryptographically verified on the DUAL Network and indexed on DUAL
               </p>
             </div>
 
@@ -313,7 +313,7 @@ export default function WineDetailPage() {
                         rel="noopener noreferrer"
                         className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 hover:border-emerald-400/50 hover:bg-emerald-500/20 transition text-xs text-emerald-300 font-semibold"
                       >
-                        <span>Verify on BLOCKv</span>
+                        <span>Verify on DUAL</span>
                         <span className="material-symbols-outlined text-xs">open_in_new</span>
                       </a>
                     )}
@@ -340,7 +340,7 @@ export default function WineDetailPage() {
                         rel="noopener noreferrer"
                         className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 hover:border-emerald-400/50 hover:bg-emerald-500/20 transition text-xs text-emerald-300 font-semibold"
                       >
-                        <span>View on BLOCKv</span>
+                        <span>View on DUAL</span>
                         <span className="material-symbols-outlined text-xs">open_in_new</span>
                       </a>
                     )}

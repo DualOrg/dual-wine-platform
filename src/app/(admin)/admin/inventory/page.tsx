@@ -211,7 +211,7 @@ export default function InventoryPage() {
                               target="_blank"
                               rel="noopener noreferrer"
                               className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/30 transition"
-                              title="View Owner on BLOCKv"
+                              title="View Owner on DUAL"
                             >
                               <span className="material-symbols-outlined text-emerald-400 text-sm">verified</span>
                             </a>
@@ -222,7 +222,7 @@ export default function InventoryPage() {
                               target="_blank"
                               rel="noopener noreferrer"
                               className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/30 transition"
-                              title="View Content Hash on BLOCKv"
+                              title="View Content Hash on DUAL"
                             >
                               <span className="material-symbols-outlined text-blue-400 text-sm">description</span>
                             </a>
@@ -233,7 +233,7 @@ export default function InventoryPage() {
                               target="_blank"
                               rel="noopener noreferrer"
                               className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 transition"
-                              title="View Integrity Hash on BLOCKv"
+                              title="View Integrity Hash on DUAL"
                             >
                               <span className="material-symbols-outlined text-purple-400 text-sm">shield</span>
                             </a>

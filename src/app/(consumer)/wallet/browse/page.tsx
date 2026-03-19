@@ -58,7 +58,7 @@ export default function MarketplacePage() {
             <span className="text-slate-500">·</span>
             <span className="text-slate-400">{wines.length} Wine Tokens</span>
             <span className="text-slate-500">·</span>
-            <span className="text-emerald-300 font-medium">BLOCKv</span>
+            <span className="text-emerald-300 font-medium">DUAL</span>
           </div>
           <a
             href="https://32f.blockv.io"
