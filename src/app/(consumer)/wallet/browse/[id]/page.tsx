@@ -36,16 +36,23 @@ export default function WineDetailPage() {
 
   useEffect(() => {
     if (!params.id) return;
-    Promise.all([
-      fetch(`/api/wines/${params.id}`).then((r: any) => r.json()),
-      fetch("/api/actions").then((r: any) => r.json()),
-    ])
-      .then(([wineData, allActions]: [any, any]) => {
-        setWine(wineData);
-        setActions(allActions.filter((a: Action) => a.wineId === params.id));
+    // Fetch wine data — don't let actions failure block the page
+    fetch(`/api/wines/${params.id}`)
+      .then((r: any) => r.json())
+      .then((wineData: any) => {
+        if (wineData && !wineData.error) setWine(wineData);
         setLoading(false);
       })
       .catch(() => setLoading(false));
+    // Fetch actions separately — non-blocking
+    fetch("/api/actions")
+      .then((r: any) => { if (r.ok) return r.json(); return []; })
+      .then((allActions: any) => {
+        if (Array.isArray(allActions)) {
+          setActions(allActions.filter((a: Action) => a.wineId === params.id));
+        }
+      })
+      .catch(() => {});
   }, [params.id]);
 
   if (loading)
