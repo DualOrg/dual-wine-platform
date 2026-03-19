@@ -10,13 +10,28 @@ export default function CellarPage() {
   const [filter, setFilter] = useState<string>("all");
 
   useEffect(() => {
-    fetch("/api/wines")
-      .then((r) => r.json())
-      .then((data) => {
-        setWines(data.filter((w: Wine) => w.ownerId === "user-001"));
+    const fetchClaimedWines = async (): Promise<void> => {
+      try {
+        // Get claimed IDs from wallet
+        const walletRes = await fetch("/api/wallet");
+        const walletData = await walletRes.json();
+        const claimedIds: string[] = walletData.claimedIds || [];
+
+        // Fetch all wines
+        const winesRes = await fetch("/api/wines");
+        const allWines: Wine[] = await winesRes.json();
+
+        // Filter to only claimed wines
+        const claimedWines = allWines.filter((w: Wine) => claimedIds.includes(w.id));
+        setWines(claimedWines);
         setLoading(false);
-      })
-      .catch(() => setLoading(false));
+      } catch (err: unknown) {
+        console.error("Failed to fetch wines:", err);
+        setLoading(false);
+      }
+    };
+
+    fetchClaimedWines();
   }, []);
 
   const filtered = filter === "all" ? wines : wines.filter((w: any) => w.wineData.type === filter);
@@ -96,7 +111,17 @@ export default function CellarPage() {
       {loading ? (
         <div className="text-center py-12 text-slate-400 text-sm">Loading cellar...</div>
       ) : filtered.length === 0 ? (
-        <div className="text-center py-12 text-slate-400 text-sm">No wines found</div>
+        <div className="text-center py-12">
+          <span className="material-symbols-outlined text-4xl text-slate-300 block mb-4">wine_bar</span>
+          <p className="text-slate-500 text-sm mb-4">No wines in your cellar yet</p>
+          <Link
+            href="/wallet/scan"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-primary-consumer text-white font-semibold rounded-lg hover:bg-primary-consumer/90 transition-colors"
+          >
+            <span className="material-symbols-outlined text-lg">qr_code_scanner</span>
+            Scan a QR code to claim a wine
+          </Link>
+        </div>
       ) : (
         <div className="space-y-3">
           {filtered.map((wine: any) => {

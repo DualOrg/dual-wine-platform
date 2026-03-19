@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import type { Wine } from '@/types/dual';
 
 type ScanState = 'scanning' | 'verifying' | 'result';
@@ -33,6 +34,7 @@ function formatCurrency(amount: number) {
 }
 
 export default function ScanPage() {
+  const router = useRouter();
   const [scanState, setScanState] = useState<ScanState>('scanning');
   const [result, setResult] = useState<VerifyResult | null>(null);
   const [cameraError, setCameraError] = useState<string | null>(null);
@@ -69,6 +71,15 @@ export default function ScanPage() {
       try { scannerRef.current.stop().catch(() => {}); } catch {}
     }
 
+    // Check if this is a claim URL (contains /claim/)
+    if (decodedText.includes('/claim/')) {
+      const match = decodedText.match(/\/claim\/([a-zA-Z0-9-]+)/);
+      if (match && match[1]) {
+        router.push(`/claim/${match[1]}`);
+        return;
+      }
+    }
+
     setScanState('verifying');
 
     setTimeout(() => {
@@ -98,7 +109,7 @@ export default function ScanPage() {
       });
       setScanState('result');
     }, 2200);
-  }, []);
+  }, [router]);
 
   const startScanner = useCallback(async () => {
     hasScanned.current = false;
