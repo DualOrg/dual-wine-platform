@@ -67,6 +67,7 @@ function mapGatewayToWine(obj: any): Wine {
     id: obj.id || '',
     templateId: obj.template_id,
     objectId: obj.id,
+    contentHash: obj.content_hash,
     wineData: {
       name: m.name || 'Token',
       producer: 'DUAL Network',

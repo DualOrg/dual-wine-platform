@@ -103,6 +103,7 @@ export interface Wine {
   id: string;
   templateId?: string;
   objectId?: string;
+  contentHash?: string;
   wineData: WineData;
   provenance: ProvenanceEvent[];
   faces: Face[];
