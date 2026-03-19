@@ -152,7 +152,10 @@ export default function ScanPage() {
   }, []);
 
   const handleDemoScan = () => {
-    handleScanResult('dual-wine://wine-001/verify?sig=demo_signature_chateau_margaux');
+    // Simulate scanning a real DUAL token
+    if (wines.length > 0) {
+      handleScanResult(`dual://token/${wines[0].id}`);
+    }
   };
 
   const handleScanAgain = () => {
