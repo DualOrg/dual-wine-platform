@@ -1,110 +1,94 @@
 'use client';
 
 import { useState, useEffect } from "react";
-import type { Template } from "@/types/dual";
 
 export default function TemplatesPage() {
-  const [templates, setTemplates] = useState<Template[]>([]);
+  const [templates, setTemplates] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetch("/api/templates")
-      .then((r) => r.json())
-      .then((data) => { setTemplates(data); setLoading(false); })
+      .then((r: any) => r.json())
+      .then((data: any) => { setTemplates(Array.isArray(data) ? data : data?.templates || []); setLoading(false); })
       .catch(() => setLoading(false));
   }, []);
 
-  if (loading) return <div className="text-center py-12 text-slate-400">Loading templates...</div>;
+  if (loading) return <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-400">Loading templates...</div>;
 
   return (
-    <div>
-      <header className="h-20 flex items-center justify-between px-8 bg-surface border-b border-slate-200">
+    <div className="min-h-screen bg-slate-950">
+      <header className="h-16 flex items-center justify-between px-8 bg-slate-900 border-b border-slate-800">
         <div className="flex items-center gap-2 text-sm">
           <span className="text-slate-500">Admin</span>
-          <span className="material-symbols-outlined text-xs text-slate-400">chevron_right</span>
-          <span className="text-primary font-semibold">Templates</span>
-        </div>
-        <div className="flex items-center gap-4">
-          <button className="p-2 text-slate-400 hover:text-primary transition-colors">
-            <span className="material-symbols-outlined">notifications</span>
-          </button>
-          <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold border border-primary/20">AD</div>
+          <span className="material-symbols-outlined text-xs text-slate-600">chevron_right</span>
+          <span className="text-emerald-400 font-semibold">Templates</span>
         </div>
       </header>
 
       <div className="p-8">
         <div className="mb-6">
-          <h1 className="text-xl font-bold text-slate-900">Wine Templates</h1>
-          <p className="text-sm text-slate-500">DUAL protocol templates define the schema for wine tokens</p>
+          <h1 className="text-xl font-bold text-white">DUAL Templates</h1>
+          <p className="text-sm text-slate-400">{templates.length} templates on the DUAL network</p>
         </div>
 
         {templates.length === 0 ? (
-          <div className="text-center py-12 text-slate-400 text-sm">No templates configured</div>
+          <div className="text-center py-12 text-slate-500 text-sm">No templates found</div>
         ) : (
-          <div className="space-y-6">
-            {templates.map((template: any) => (
-              <div key={template.id} className="bg-surface rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                <div className="p-6 border-b border-slate-100">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center">
-                      <span className="material-symbols-outlined text-primary">description</span>
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-slate-900">{template.name}</h3>
-                      <p className="text-xs text-slate-500">ID: {template.id}</p>
-                    </div>
-                  </div>
-                  <p className="text-sm text-slate-600 mt-2">{template.description}</p>
-                </div>
-
-                {/* Properties */}
-                <div className="p-6 border-b border-slate-100">
-                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                    <span className="material-symbols-outlined text-sm">settings</span>
-                    Properties Schema
-                  </h4>
-                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {template.properties.map((prop: any) => (
-                      <div key={prop.key} className="bg-slate-50 rounded-xl p-3 border border-slate-100">
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-sm font-semibold text-slate-900">{prop.key}</span>
-                          {prop.required && (
-                            <span className="text-[10px] font-bold text-accent uppercase">required</span>
-                          )}
-                        </div>
-                        <div className="text-xs text-slate-500">
-                          Type: <code className="bg-white px-1.5 py-0.5 rounded border border-slate-200 text-slate-700">{prop.type}</code>
-                          {prop.enumValues && (
-                            <span className="ml-1 text-slate-400">({prop.enumValues.join(", ")})</span>
-                          )}
-                        </div>
+          <div className="space-y-4">
+            {templates.map((template: any) => {
+              const actions = template.actions || [];
+              const properties = template.properties || [];
+              return (
+                <div key={template.id} className="bg-slate-900 rounded-xl border border-slate-800 overflow-hidden hover:border-slate-700 transition">
+                  <div className="p-5 border-b border-slate-800">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+                        <span className="material-symbols-outlined text-emerald-400">description</span>
                       </div>
-                    ))}
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-bold text-white truncate">{template.name}</h3>
+                        <code className="text-[10px] text-slate-500 font-mono">{template.id}</code>
+                      </div>
+                      <span className="text-xs text-slate-500">{new Date(template.createdAt).toLocaleDateString()}</span>
+                    </div>
+                    {template.description && (
+                      <p className="text-sm text-slate-400 mt-2 line-clamp-2">{template.description}</p>
+                    )}
                   </div>
-                </div>
 
-                {/* Actions */}
-                <div className="p-6">
-                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                    <span className="material-symbols-outlined text-sm">bolt</span>
-                    Available Actions
-                  </h4>
-                  <div className="grid sm:grid-cols-2 gap-3">
-                    {template.actions.map((action: any) => (
-                      <div key={action.type} className="bg-slate-50 rounded-xl p-3 border border-slate-100">
-                        <div className="font-semibold text-sm text-slate-900 mb-0.5">{action.label}</div>
-                        <div className="text-xs text-slate-500">{action.description}</div>
-                        {action.requiredParams.length > 0 && (
-                          <div className="text-[10px] text-slate-400 mt-1">
-                            Params: {action.requiredParams.join(", ")}
+                  {actions.length > 0 && (
+                    <div className="p-5">
+                      <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-3">Actions</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {actions.map((action: any, i: number) => (
+                          <span key={i} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-xs text-slate-300">
+                            <span className="material-symbols-outlined text-emerald-400" style={{fontSize: '14px'}}>bolt</span>
+                            {action.name || action.type || 'action'}
+                            {action.access?.type === 'public' && (
+                              <span className="text-[9px] text-emerald-500 ml-1">public</span>
+                            )}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {properties.length > 0 && (
+                    <div className="p-5 border-t border-slate-800">
+                      <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-3">Properties</h4>
+                      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                        {properties.map((prop: any, i: number) => (
+                          <div key={i} className="bg-slate-800 rounded-lg p-2 border border-slate-700 text-xs text-slate-300">
+                            <span className="font-semibold text-white">{prop.key || prop.name || `prop_${i}`}</span>
+                            {prop.type && <code className="ml-2 text-slate-500">{prop.type}</code>}
                           </div>
-                        )}
+                        ))}
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  )}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
