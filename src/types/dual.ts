@@ -92,6 +92,13 @@ export interface ProvenanceEvent {
   txHash?: string;
 }
 
+export interface ExplorerLinks {
+  owner: string | null;
+  contentHash: string | null;
+  integrityHash: string | null;
+  org: string | null;
+}
+
 export interface Wine {
   id: string;
   templateId?: string;
@@ -105,6 +112,7 @@ export interface Wine {
   updatedAt: string;
   anchoredAt?: string;
   blockchainTxHash?: string;
+  explorerLinks?: ExplorerLinks;
 }
 
 export type WineStatus =

@@ -108,6 +108,7 @@ export default function InventoryPage() {
                   <th className="text-left px-5 py-3.5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Value</th>
                   <th className="text-left px-5 py-3.5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Status</th>
                   <th className="text-left px-5 py-3.5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Verified</th>
+                  <th className="text-left px-5 py-3.5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Explorer</th>
                   <th className="text-left px-5 py-3.5"></th>
                 </tr>
               </thead>
@@ -130,6 +131,47 @@ export default function InventoryPage() {
                     <td className="px-5 py-4">
                       {wine.anchoredAt ? (
                         <span className="material-symbols-outlined text-green-500 text-lg">verified</span>
+                      ) : (
+                        <span className="text-slate-300">—</span>
+                      )}
+                    </td>
+                    <td className="px-5 py-4">
+                      {wine.explorerLinks && (wine.explorerLinks.owner || wine.explorerLinks.contentHash || wine.explorerLinks.integrityHash) ? (
+                        <div className="flex items-center gap-1.5">
+                          {wine.explorerLinks.owner && (
+                            <a
+                              href={wine.explorerLinks.owner}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-emerald-100 hover:bg-emerald-200 transition"
+                              title="View on Blockscout"
+                            >
+                              <span className="material-symbols-outlined text-emerald-600 text-sm">verified</span>
+                            </a>
+                          )}
+                          {wine.explorerLinks.contentHash && (
+                            <a
+                              href={wine.explorerLinks.contentHash}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-blue-100 hover:bg-blue-200 transition"
+                              title="View Content Hash on Blockscout"
+                            >
+                              <span className="material-symbols-outlined text-blue-600 text-sm">description</span>
+                            </a>
+                          )}
+                          {wine.explorerLinks.integrityHash && (
+                            <a
+                              href={wine.explorerLinks.integrityHash}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-purple-100 hover:bg-purple-200 transition"
+                              title="View Integrity Hash on Blockscout"
+                            >
+                              <span className="material-symbols-outlined text-purple-600 text-sm">shield</span>
+                            </a>
+                          )}
+                        </div>
                       ) : (
                         <span className="text-slate-300">—</span>
                       )}

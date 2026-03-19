@@ -209,6 +209,65 @@ export default function WineDetailPage() {
                 </p>
               </div>
             )}
+
+            {/* Blockchain Verification */}
+            {wine.explorerLinks && (
+              <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
+                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">
+                  Blockchain Verification
+                </h4>
+                <div className="flex flex-wrap gap-3">
+                  {wine.explorerLinks.owner && (
+                    <a
+                      href={wine.explorerLinks.owner}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white border border-slate-200 hover:border-emerald-400 hover:bg-emerald-50 transition-all"
+                    >
+                      <span className="inline-block w-2 h-2 bg-emerald-400 rounded-full"></span>
+                      <span className="text-xs font-semibold text-slate-700 hover:text-emerald-600">
+                        Owner
+                      </span>
+                      <span className="material-symbols-outlined text-xs text-slate-400">
+                        open_in_new
+                      </span>
+                    </a>
+                  )}
+                  {wine.explorerLinks.contentHash && (
+                    <a
+                      href={wine.explorerLinks.contentHash}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white border border-slate-200 hover:border-emerald-400 hover:bg-emerald-50 transition-all"
+                    >
+                      <span className="inline-block w-2 h-2 bg-emerald-400 rounded-full"></span>
+                      <span className="text-xs font-semibold text-slate-700 hover:text-emerald-600">
+                        Content
+                      </span>
+                      <span className="material-symbols-outlined text-xs text-slate-400">
+                        open_in_new
+                      </span>
+                    </a>
+                  )}
+                  {wine.explorerLinks.integrityHash && (
+                    <a
+                      href={wine.explorerLinks.integrityHash}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white border border-slate-200 hover:border-emerald-400 hover:bg-emerald-50 transition-all"
+                    >
+                      <span className="inline-block w-2 h-2 bg-emerald-400 rounded-full"></span>
+                      <span className="text-xs font-semibold text-slate-700 hover:text-emerald-600">
+                        Integrity
+                      </span>
+                      <span className="material-symbols-outlined text-xs text-slate-400">
+                        open_in_new
+                      </span>
+                    </a>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
