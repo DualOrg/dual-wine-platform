@@ -72,6 +72,8 @@ class OrganizationsModule {
   constructor(private http: HttpClient) {}
   async listOrganizations(q?: Record<string, any>) { return this.http.request('GET', '/organizations', { query: q }); }
   async createOrganization(b?: any, q?: Record<string, any>) { return this.http.request('POST', '/organizations', { body: b, query: q }); }
+  /** Switch org context. Body: { id: orgId }. Returns { access_token, organization } */
+  async switchOrganization(b?: any, q?: Record<string, any>) { return this.http.request('POST', '/organizations/switch', { body: b, query: q }); }
   async getOrganization(id: string, q?: Record<string, any>) { return this.http.request('GET', '/organizations/' + id, { query: q }); }
   async updateOrganization(id: string, b?: any, q?: Record<string, any>) { return this.http.request('PUT', '/organizations/' + id, { body: b, query: q }); }
   async getOrganizationBalance(id: string, q?: Record<string, any>) { return this.http.request('GET', '/organizations/' + id + '/balance', { query: q }); }
@@ -92,9 +94,14 @@ class OrganizationsModule {
 
 class EbusModule {
   constructor(private http: HttpClient) {}
-  async executeAction(b?: any, q?: Record<string, any>) { return this.http.request('POST', '/ebus/actions', { body: b, query: q }); }
-  async listActions(q?: Record<string, any>) { return this.http.request('GET', '/ebus/actions', { query: q }); }
-  async getAction(id: string, q?: Record<string, any>) { return this.http.request('GET', '/ebus/actions/' + id, { query: q }); }
+  /** Execute an action (mint, transfer, burn, etc.) via /ebus/execute — requires JWT auth */
+  async execute(b?: any, q?: Record<string, any>) { return this.http.request('POST', '/ebus/execute', { body: b, query: q }); }
+  /** @deprecated alias — use execute() instead */
+  async executeAction(b?: any, q?: Record<string, any>) { return this.execute(b, q); }
+  async listActionLogs(q?: Record<string, any>) { return this.http.request('GET', '/ebus/action-logs', { query: q }); }
+  /** @deprecated alias */
+  async listActions(q?: Record<string, any>) { return this.listActionLogs(q); }
+  async getAction(id: string, q?: Record<string, any>) { return this.http.request('GET', '/ebus/action-logs/' + id, { query: q }); }
   async executeBatchActions(b?: any, q?: Record<string, any>) { return this.http.request('POST', '/ebus/actions/batch', { body: b, query: q }); }
   async listActionTypes(q?: Record<string, any>) { return this.http.request('GET', '/ebus/action-types', { query: q }); }
   async createActionType(b?: any, q?: Record<string, any>) { return this.http.request('POST', '/ebus/action-types', { body: b, query: q }); }
@@ -102,22 +109,28 @@ class EbusModule {
   async updateActionType(id: string, b?: any, q?: Record<string, any>) { return this.http.request('PUT', '/ebus/action-types/' + id, { body: b, query: q }); }
 }
 
+class AuthModule {
+  constructor(private http: HttpClient) {}
+  /** Send OTP to email */
+  async sendOtp(b?: any, q?: Record<string, any>) { return this.http.request('POST', '/auth/otp', { body: b, query: q }); }
+  /** Login with email + otp (or password). Returns { access_token, refresh_token, wallet } */
+  async login(b?: any, q?: Record<string, any>) { return this.http.request('POST', '/auth/login', { body: b, query: q }); }
+  /** Verify account with code */
+  async verify(b?: any, q?: Record<string, any>) { return this.http.request('POST', '/auth/verify', { body: b, query: q }); }
+  /** Set password */
+  async setPassword(b?: any, q?: Record<string, any>) { return this.http.request('POST', '/auth/set-password', { body: b, query: q }); }
+  /** Refresh access token */
+  async refreshToken(b?: any, q?: Record<string, any>) { return this.http.request('POST', '/auth/refresh-token', { body: b, query: q }); }
+}
+
 class WalletsModule {
   constructor(private http: HttpClient) {}
-  async login(b?: any, q?: Record<string, any>) { return this.http.request('POST', '/wallets/login', { body: b, query: q }); }
-  async guestLogin(b?: any, q?: Record<string, any>) { return this.http.request('POST', '/wallets/login/guest', { body: b, query: q }); }
-  async requestResetCode(b?: any, q?: Record<string, any>) { return this.http.request('POST', '/wallets/reset-code', { body: b, query: q }); }
-  async verifyResetCode(b?: any, q?: Record<string, any>) { return this.http.request('POST', '/wallets/reset-code/verify', { body: b, query: q }); }
-  async register(b?: any, q?: Record<string, any>) { return this.http.request('POST', '/wallets/register', { body: b, query: q }); }
-  async verifyRegistration(b?: any, q?: Record<string, any>) { return this.http.request('POST', '/wallets/register/verify', { body: b, query: q }); }
+  /** @deprecated Use auth.login() instead */
+  async login(b?: any, q?: Record<string, any>) { return this.http.request('POST', '/auth/login', { body: b, query: q }); }
   async getCurrentWallet(q?: Record<string, any>) { return this.http.request('GET', '/wallets/me', { query: q }); }
   async updateCurrentWallet(b?: any, q?: Record<string, any>) { return this.http.request('PATCH', '/wallets/me', { body: b, query: q }); }
-  async deleteCurrentWallet(q?: Record<string, any>) { return this.http.request('DELETE', '/wallets/me', { query: q }); }
-  async getLinkedWallets(q?: Record<string, any>) { return this.http.request('GET', '/wallets/me/linked', { query: q }); }
   async getWalletById(id: string, q?: Record<string, any>) { return this.http.request('GET', '/wallets/' + id, { query: q }); }
-  async getLinkedWalletsById(id: string, q?: Record<string, any>) { return this.http.request('GET', '/wallets/' + id + '/linked', { query: q }); }
-  async linkWallet(b?: any, q?: Record<string, any>) { return this.http.request('POST', '/wallets/link', { body: b, query: q }); }
-  async refreshToken(b?: any, q?: Record<string, any>) { return this.http.request('POST', '/wallets/token/refresh', { body: b, query: q }); }
+  async refreshToken(b?: any, q?: Record<string, any>) { return this.http.request('POST', '/auth/refresh-token', { body: b, query: q }); }
 }
 
 class ApiKeysModule { constructor(private http: HttpClient) {} async listApiKeys(q?: Record<string, any>) { return this.http.request('GET', '/api-keys', { query: q }); } async createApiKey(b?: any, q?: Record<string, any>) { return this.http.request('POST', '/api-keys', { body: b, query: q }); } async deleteApiKey(id: string, q?: Record<string, any>) { return this.http.request('DELETE', '/api-keys/' + id, { query: q }); } }
@@ -207,6 +220,7 @@ class IndexerModule {
 
 export class DualClient {
   private http: HttpClient;
+  auth: AuthModule;
   payments: PaymentsModule; support: SupportModule; organizations: OrganizationsModule;
   ebus: EbusModule; wallets: WalletsModule; apikeys: ApiKeysModule;
   templates: TemplatesModule; objects: ObjectsModule; faces: FacesModule;
@@ -214,6 +228,7 @@ export class DualClient {
   sequencer: SequencerModule; indexer: IndexerModule;
   constructor(config?: DualConfig) {
     this.http = new HttpClient(config);
+    this.auth = new AuthModule(this.http);
     this.payments = new PaymentsModule(this.http); this.support = new SupportModule(this.http);
     this.organizations = new OrganizationsModule(this.http); this.ebus = new EbusModule(this.http);
     this.wallets = new WalletsModule(this.http); this.apikeys = new ApiKeysModule(this.http);
