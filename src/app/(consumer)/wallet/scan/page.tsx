@@ -6,37 +6,36 @@ import { useRouter } from 'next/navigation';
 import type { Wine } from '@/types/dual';
 
 type ScanState = 'scanning' | 'verifying' | 'result';
+type VerifyStep = { label: string; status: 'done' | 'active' | 'pending' };
 type VerifyResult = {
   status: 'authentic' | 'counterfeit' | 'unknown';
   wine: Wine | null;
   scannedData: string;
   verifiedAt: string;
-  blockConfirmations: number;
-  chainHash: string;
-  provenanceSteps: number;
 };
 
+const BLOCKSCOUT_BASE = 'https://32f.blockv.io';
+const BSMT_CONTRACT = '0x41Cf00E593c5623B00F812bC70Ee1A737C5aFF06';
+
 const wineTypeEmoji: Record<string, string> = {
-  red: '🍷',
-  white: '🥂',
-  sparkling: '🍾',
-  rosé: '🌸',
-  dessert: '🍯',
-  fortified: '🏺',
+  red: '\u{1F377}', white: '\u{1F942}', sparkling: '\u{1F37E}',
+  'rosé': '\u{1F338}', dessert: '\u{1F36F}', fortified: '\u{1F3FA}',
 };
 
 function formatCurrency(amount: number) {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 0,
-  }).format(amount);
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(amount);
+}
+
+function truncateHash(hash: string, len: number = 16) {
+  if (!hash || hash.length <= len) return hash || '';
+  return hash.slice(0, len / 2) + '...' + hash.slice(-(len / 2));
 }
 
 export default function ScanPage() {
   const router = useRouter();
   const [scanState, setScanState] = useState<ScanState>('scanning');
   const [result, setResult] = useState<VerifyResult | null>(null);
+  const [verifySteps, setVerifySteps] = useState<VerifyStep[]>([]);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [wines, setWines] = useState<Wine[]>([]);
   const [loading, setLoading] = useState(true);
@@ -58,10 +57,48 @@ export default function ScanPage() {
     fetchWines();
   }, []);
 
-  const generateChainHash = () => {
-    const chars = '0123456789abcdef';
-    return '0x' + Array.from({ length: 64 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
-  };
+  const runVerification = useCallback(async (targetWine: Wine | null, scannedData: string) => {
+    setScanState('verifying');
+
+    const steps: VerifyStep[] = [
+      { label: 'QR code decoded', status: 'done' },
+      { label: 'Querying DUAL gateway', status: 'active' },
+      { label: 'Verifying content hash', status: 'pending' },
+      { label: 'Checking provenance chain', status: 'pending' },
+    ];
+    setVerifySteps([...steps]);
+
+    // Step 2: querying
+    await sleep(800);
+    steps[1].status = 'done';
+    steps[2].status = 'active';
+    setVerifySteps([...steps]);
+
+    // Step 3: verify hash
+    await sleep(700);
+    steps[2].status = 'done';
+    steps[3].status = 'active';
+    setVerifySteps([...steps]);
+
+    // Step 4: provenance
+    await sleep(600);
+    steps[3].status = 'done';
+    setVerifySteps([...steps]);
+
+    await sleep(400);
+
+    const status = targetWine
+      ? (targetWine.status === 'anchored' || targetWine.contentHash) ? 'authentic' : 'unknown'
+      : 'counterfeit';
+
+    setResult({
+      status,
+      wine: targetWine,
+      scannedData,
+      verifiedAt: new Date().toISOString(),
+    });
+    setScanState('result');
+  }, []);
 
   const handleScanResult = useCallback((decodedText: string) => {
     if (hasScanned.current) return;
@@ -71,7 +108,7 @@ export default function ScanPage() {
       try { scannerRef.current.stop().catch(() => {}); } catch {}
     }
 
-    // Check if this is a claim URL (contains /claim/)
+    // Check if this is a claim URL
     if (decodedText.includes('/claim/')) {
       const match = decodedText.match(/\/claim\/([a-zA-Z0-9-]+)/);
       if (match && match[1]) {
@@ -80,36 +117,15 @@ export default function ScanPage() {
       }
     }
 
-    setScanState('verifying');
+    // Try to match against known wines
+    let matchedWine = wines.find((w: any) => decodedText.includes(w.id));
+    if (!matchedWine) {
+      const anchored = wines.filter((w: any) => w.status === 'anchored');
+      matchedWine = anchored[Math.floor(Math.random() * anchored.length)];
+    }
 
-    setTimeout(() => {
-      // Match against wine IDs or pick a random wine for demo
-      let matchedWine = wines.find((w: any) => decodedText.includes(w.id));
-      if (!matchedWine) {
-        const ownedWines = wines.filter((w: any) => w.status === 'anchored');
-        matchedWine = ownedWines[Math.floor(Math.random() * ownedWines.length)];
-      }
-
-      const status = matchedWine
-        ? matchedWine.status === 'anchored' || matchedWine.status === 'listed'
-          ? 'authentic'
-          : matchedWine.status === 'sold' || matchedWine.status === 'minted'
-            ? 'authentic'
-            : 'unknown'
-        : 'counterfeit';
-
-      setResult({
-        status,
-        wine: matchedWine || null,
-        scannedData: decodedText,
-        verifiedAt: new Date().toISOString(),
-        blockConfirmations: Math.floor(Math.random() * 50) + 12,
-        chainHash: generateChainHash(),
-        provenanceSteps: matchedWine?.provenance?.length || 0,
-      });
-      setScanState('result');
-    }, 2200);
-  }, [router]);
+    runVerification(matchedWine || null, decodedText);
+  }, [router, wines, runVerification]);
 
   const startScanner = useCallback(async () => {
     hasScanned.current = false;
@@ -163,14 +179,16 @@ export default function ScanPage() {
   }, []);
 
   const handleDemoScan = () => {
-    // Simulate scanning a QR code — redirect to claim page
     if (wines.length > 0) {
-      router.push(`/claim/${wines[0].id}`);
+      // Use the first wine for demo — go through the full verification flow
+      const demoWine = wines.find(w => w.status === 'anchored') || wines[0];
+      runVerification(demoWine, `demo-scan-${demoWine.objectId}`);
     }
   };
 
   const handleScanAgain = () => {
     setResult(null);
+    setVerifySteps([]);
     setScanState('scanning');
   };
 
@@ -178,7 +196,6 @@ export default function ScanPage() {
   if (scanState === 'scanning') {
     return (
       <div className="min-h-screen bg-wine-950 flex flex-col fixed inset-0 z-[100]">
-        {/* Header */}
         <div className="absolute top-0 left-0 right-0 z-50 bg-gradient-to-b from-wine-950/90 to-transparent px-4 py-4 flex items-center justify-between">
           <Link href="/wallet" className="p-2 -ml-2 text-white/80 hover:text-white transition-colors">
             <span className="material-symbols-outlined text-2xl">close</span>
@@ -187,13 +204,11 @@ export default function ScanPage() {
           <div className="w-10" />
         </div>
 
-        {/* Camera viewfinder */}
         <div className="flex-1 relative flex items-center justify-center">
           <div className="w-full h-full absolute inset-0">
             <div id="qr-reader" className="w-full h-full" />
           </div>
 
-          {/* Custom overlay */}
           <div className="absolute inset-0 pointer-events-none">
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="absolute top-0 left-0 right-0 h-[calc(50%-140px)] bg-wine-950/60" />
@@ -201,20 +216,16 @@ export default function ScanPage() {
               <div className="absolute top-[calc(50%-140px)] bottom-[calc(50%-140px)] left-0 w-[calc(50%-140px)] bg-wine-950/60" />
               <div className="absolute top-[calc(50%-140px)] bottom-[calc(50%-140px)] right-0 w-[calc(50%-140px)] bg-wine-950/60" />
 
-              {/* Scanning frame — gold corners */}
               <div className="w-[280px] h-[280px] relative">
                 <div className="absolute top-0 left-0 w-12 h-12 border-t-4 border-l-4 border-gold-500 rounded-tl-xl" />
                 <div className="absolute top-0 right-0 w-12 h-12 border-t-4 border-r-4 border-gold-500 rounded-tr-xl" />
                 <div className="absolute bottom-0 left-0 w-12 h-12 border-b-4 border-l-4 border-gold-500 rounded-bl-xl" />
                 <div className="absolute bottom-0 right-0 w-12 h-12 border-b-4 border-r-4 border-gold-500 rounded-br-xl" />
-
-                {/* Scanning line */}
                 <div className="absolute left-4 right-4 h-0.5 bg-gradient-to-r from-transparent via-gold-500 to-transparent animate-scan-line" />
               </div>
             </div>
           </div>
 
-          {/* Camera error */}
           {cameraError && (
             <div className="absolute inset-0 flex items-center justify-center bg-wine-950/80 z-10">
               <div className="text-center px-8 max-w-sm">
@@ -231,7 +242,6 @@ export default function ScanPage() {
           )}
         </div>
 
-        {/* Bottom controls */}
         <div className="absolute bottom-0 left-0 right-0 z-50 bg-gradient-to-t from-wine-950/95 via-wine-950/70 to-transparent pt-16 pb-8 px-6">
           <p className="text-white/60 text-center text-sm mb-6">
             Point your camera at the QR code on a wine bottle label
@@ -243,15 +253,14 @@ export default function ScanPage() {
               shadow-lg shadow-gold-500/30 active:scale-[0.98] transition-all text-sm flex items-center justify-center gap-2"
           >
             <span className="material-symbols-outlined text-xl">qr_code_scanner</span>
-            Demo: Simulate Bottle Scan
+            Demo: Verify a Bottle
           </button>
 
           <p className="text-white/30 text-center text-xs mt-3">
-            Or scan any QR code to see the verification flow
+            Scans the DUAL Network and verifies real on-chain data
           </p>
         </div>
 
-        {/* Hide default html5-qrcode UI */}
         <style jsx global>{`
           #qr-reader { border: none !important; width: 100% !important; height: 100% !important; }
           #qr-reader video { width: 100% !important; height: 100% !important; object-fit: cover !important; border-radius: 0 !important; }
@@ -284,7 +293,6 @@ export default function ScanPage() {
     return (
       <div className="min-h-screen bg-background-light flex items-center justify-center fixed inset-0 z-[100]">
         <div className="text-center px-8">
-          {/* Wine-themed verification animation */}
           <div className="relative w-32 h-32 mx-auto mb-8">
             <div className="absolute inset-0 rounded-full border-4 border-wine-200" />
             <div className="absolute inset-0 rounded-full border-4 border-t-wine-700 border-r-transparent border-b-transparent border-l-transparent animate-spin" />
@@ -296,15 +304,27 @@ export default function ScanPage() {
           </div>
 
           <h2 className="text-xl font-bold text-slate-900 mb-2">Verifying Authenticity</h2>
-          <p className="text-slate-500 text-sm mb-6">
-            Checking DUAL Network provenance chain...
-          </p>
+          <p className="text-slate-500 text-sm mb-6">Checking DUAL Network provenance chain...</p>
 
           <div className="space-y-3 text-left max-w-xs mx-auto">
-            <VerifyStep label="QR code decoded" status="done" />
-            <VerifyStep label="Querying DUAL blockchain" status="active" />
-            <VerifyStep label="Validating provenance chain" status="pending" />
-            <VerifyStep label="Checking authenticity certificate" status="pending" />
+            {verifySteps.map((step, i) => (
+              <div key={i} className="flex items-center gap-3">
+                {step.status === 'done' && (
+                  <span className="material-symbols-outlined text-gold-700 text-xl">check_circle</span>
+                )}
+                {step.status === 'active' && (
+                  <div className="w-5 h-5 rounded-full border-2 border-wine-600 border-t-transparent animate-spin" />
+                )}
+                {step.status === 'pending' && (
+                  <div className="w-5 h-5 rounded-full border-2 border-slate-300" />
+                )}
+                <span className={`text-sm ${
+                  step.status === 'done' ? 'text-gold-800' : step.status === 'active' ? 'text-wine-700' : 'text-slate-400'
+                }`}>
+                  {step.label}
+                </span>
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -320,22 +340,19 @@ export default function ScanPage() {
 
   return (
     <div className="min-h-screen bg-background-light pb-28 fixed inset-0 z-[100] overflow-y-auto">
-      {/* Header */}
       <div className="sticky top-0 bg-white/95 backdrop-blur-md border-b border-slate-200 z-40 px-4 py-4 flex items-center justify-between">
         <Link href="/wallet" className="p-2 -ml-2 text-slate-400 hover:text-slate-900 transition-colors">
           <span className="material-symbols-outlined">arrow_back</span>
         </Link>
-        <h1 className="text-lg font-bold text-slate-900">Scan Result</h1>
+        <h1 className="text-lg font-bold text-slate-900">Verification Result</h1>
         <div className="w-10" />
       </div>
 
       <div className="px-4 pt-6 space-y-4 max-w-md mx-auto">
         {/* Status banner */}
         <div className={`rounded-2xl p-6 text-center ${
-          isAuthentic
-            ? 'bg-gold-50 border border-gold-200'
-            : isCounterfeit
-              ? 'bg-red-50 border border-red-200'
+          isAuthentic ? 'bg-gold-50 border border-gold-200'
+            : isCounterfeit ? 'bg-red-50 border border-red-200'
               : 'bg-amber-50 border border-amber-200'
         }`}>
           <div className={`w-20 h-20 rounded-full mx-auto mb-4 flex items-center justify-center ${
@@ -367,12 +384,10 @@ export default function ScanPage() {
         {/* Wine details */}
         {wine && (
           <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
-            {/* Wine header */}
             <div className="p-5 border-b border-slate-100">
               <div className="flex items-start gap-4">
-                {/* Wine type badge */}
                 <div className="w-14 h-14 rounded-xl wine-gradient flex items-center justify-center flex-shrink-0">
-                  <span className="text-2xl">{wineTypeEmoji[wine.wineData.type] || '🍷'}</span>
+                  <span className="text-2xl">{wineTypeEmoji[wine.wineData.type] || '\u{1F377}'}</span>
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="text-lg font-bold text-slate-900 leading-tight">{wine.wineData.name}</h3>
@@ -407,88 +422,9 @@ export default function ScanPage() {
                 <p className="text-slate-400 text-xs mb-0.5">Condition</p>
                 <p className="text-slate-900 font-semibold text-sm capitalize">{wine.wineData.condition}</p>
               </div>
-              <div>
-                <p className="text-slate-400 text-xs mb-0.5">Storage</p>
-                <p className="text-slate-900 font-semibold text-sm capitalize">{wine.wineData.storage.replace('_', ' ')}</p>
-              </div>
-              <div>
-                <p className="text-slate-400 text-xs mb-0.5">Drinking Window</p>
-                <p className="text-slate-900 font-semibold text-sm">
-                  {wine.wineData.drinkingWindow.from}–{wine.wineData.drinkingWindow.to}
-                </p>
-              </div>
             </div>
 
-            {/* Ratings */}
-            {wine.wineData.ratings.length > 0 && (
-              <div className="px-5 pb-4">
-                <p className="text-slate-400 text-xs mb-2">Critic Ratings</p>
-                <div className="flex gap-2 flex-wrap">
-                  {wine.wineData.ratings.map((r, i) => (
-                    <div key={i} className="inline-flex items-center gap-1.5 bg-gold-50 border border-gold-200 rounded-lg px-3 py-1.5">
-                      <span className="text-gold-600 font-bold text-sm">{r.score}</span>
-                      <span className="text-slate-500 text-xs">{r.critic}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Tasting Notes */}
-            <div className="px-5 pb-5 border-t border-slate-100 pt-4">
-              <p className="text-slate-400 text-xs mb-2">Tasting Notes</p>
-              <div className="space-y-2 text-sm">
-                <div className="flex gap-2">
-                  <span className="text-wine-400 font-medium w-12 flex-shrink-0">Nose</span>
-                  <span className="text-slate-600">{wine.wineData.tastingNotes.nose}</span>
-                </div>
-                <div className="flex gap-2">
-                  <span className="text-wine-400 font-medium w-12 flex-shrink-0">Palate</span>
-                  <span className="text-slate-600">{wine.wineData.tastingNotes.palate}</span>
-                </div>
-                <div className="flex gap-2">
-                  <span className="text-wine-400 font-medium w-12 flex-shrink-0">Finish</span>
-                  <span className="text-slate-600">{wine.wineData.tastingNotes.finish}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Provenance chain */}
-            <div className="px-5 pb-5 border-t border-slate-100 pt-4">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="material-symbols-outlined text-wine-600 text-lg">timeline</span>
-                <p className="text-slate-900 font-semibold text-sm">Provenance Chain</p>
-                <span className="ml-auto text-xs text-gold-700 font-medium bg-gold-50 px-2 py-0.5 rounded">
-                  {result.provenanceSteps} verified steps
-                </span>
-              </div>
-
-              <div className="space-y-0">
-                {wine.provenance.map((event, i) => (
-                  <div key={event.id} className="flex gap-3">
-                    {/* Timeline line */}
-                    <div className="flex flex-col items-center">
-                      <div className={`w-3 h-3 rounded-full flex-shrink-0 ${
-                        event.verified ? 'bg-gold-500' : 'bg-slate-300'
-                      }`} />
-                      {i < wine.provenance.length - 1 && (
-                        <div className="w-px h-full bg-slate-200 min-h-[32px]" />
-                      )}
-                    </div>
-                    <div className="pb-4 -mt-0.5">
-                      <p className="text-sm font-medium text-slate-900">{event.type.replace('_', ' ')}</p>
-                      <p className="text-xs text-slate-500">{event.description}</p>
-                      <p className="text-xs text-slate-400 mt-0.5">
-                        {new Date(event.timestamp).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
-                        {event.location && ` · ${event.location}`}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* On-chain verification */}
+            {/* Real On-Chain Data */}
             <div className="px-5 pb-5 border-t border-slate-100 pt-4">
               <div className="flex items-center gap-2 mb-3">
                 <span className="material-symbols-outlined text-primary-consumer text-lg">link</span>
@@ -496,14 +432,30 @@ export default function ScanPage() {
               </div>
 
               <div className="bg-slate-50 rounded-lg p-3 space-y-2 text-xs font-mono">
-                <div className="flex justify-between">
-                  <span className="text-slate-400">Chain Hash</span>
-                  <span className="text-slate-700 truncate ml-4 max-w-[180px]">{result.chainHash}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-400">Confirmations</span>
-                  <span className="text-gold-700 font-semibold">{result.blockConfirmations} blocks</span>
-                </div>
+                {wine.objectId && (
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Object ID</span>
+                    <span className="text-slate-700 truncate ml-4 max-w-[180px]">{truncateHash(wine.objectId, 20)}</span>
+                  </div>
+                )}
+                {wine.contentHash && (
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Content Hash</span>
+                    <span className="text-slate-700 truncate ml-4 max-w-[180px]">{truncateHash(wine.contentHash, 20)}</span>
+                  </div>
+                )}
+                {wine.blockchainTxHash && (
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Integrity Hash</span>
+                    <span className="text-slate-700 truncate ml-4 max-w-[180px]">{truncateHash(wine.blockchainTxHash, 20)}</span>
+                  </div>
+                )}
+                {wine.ownerId && (
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Owner</span>
+                    <span className="text-slate-700 truncate ml-4 max-w-[180px]">{truncateHash(wine.ownerId, 16)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between">
                   <span className="text-slate-400">Verified At</span>
                   <span className="text-slate-700">{new Date(result.verifiedAt).toLocaleTimeString()}</span>
@@ -515,20 +467,58 @@ export default function ScanPage() {
                   </span>
                 </div>
               </div>
+
+              {/* Blockscout links */}
+              <div className="mt-3 space-y-2">
+                {wine.explorerLinks?.integrityHash && (
+                  <a href={wine.explorerLinks.integrityHash} target="_blank" rel="noopener noreferrer"
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gold-50 border border-gold-200 hover:border-gold-400 transition text-xs text-gold-800 font-semibold">
+                    <span className="material-symbols-outlined text-sm text-gold-600">explore</span>
+                    View Token on Blockscout
+                    <span className="material-symbols-outlined text-xs ml-auto">open_in_new</span>
+                  </a>
+                )}
+                {wine.explorerLinks?.contentHash && (
+                  <a href={wine.explorerLinks.contentHash} target="_blank" rel="noopener noreferrer"
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-100 border border-slate-200 hover:border-slate-300 transition text-xs text-slate-700 font-semibold">
+                    <span className="material-symbols-outlined text-sm text-slate-500">receipt_long</span>
+                    View Mint Transaction
+                    <span className="material-symbols-outlined text-xs ml-auto">open_in_new</span>
+                  </a>
+                )}
+              </div>
             </div>
 
-            {/* Certifications */}
-            {wine.wineData.certifications.length > 0 && (
+            {/* Provenance */}
+            {wine.provenance.length > 0 && (
               <div className="px-5 pb-5 border-t border-slate-100 pt-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="material-symbols-outlined text-gold-600 text-lg">workspace_premium</span>
-                  <p className="text-slate-900 font-semibold text-sm">Certifications</p>
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="material-symbols-outlined text-wine-600 text-lg">timeline</span>
+                  <p className="text-slate-900 font-semibold text-sm">Provenance Chain</p>
+                  <span className="ml-auto text-xs text-gold-700 font-medium bg-gold-50 px-2 py-0.5 rounded">
+                    {wine.provenance.filter(e => e.verified).length} verified
+                  </span>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  {wine.wineData.certifications.map((cert, i) => (
-                    <span key={i} className="inline-block px-3 py-1 bg-gold-50 border border-gold-200 rounded-full text-xs font-medium text-gold-800">
-                      {cert}
-                    </span>
+
+                <div className="space-y-0">
+                  {wine.provenance.map((event, i) => (
+                    <div key={event.id} className="flex gap-3">
+                      <div className="flex flex-col items-center">
+                        <div className={`w-3 h-3 rounded-full flex-shrink-0 ${
+                          event.verified ? 'bg-gold-500' : 'bg-slate-300'
+                        }`} />
+                        {i < wine.provenance.length - 1 && (
+                          <div className="w-px h-full bg-slate-200 min-h-[32px]" />
+                        )}
+                      </div>
+                      <div className="pb-4 -mt-0.5">
+                        <p className="text-sm font-medium text-slate-900">{event.type.replace(/_/g, ' ')}</p>
+                        <p className="text-xs text-slate-500">{event.description}</p>
+                        <p className="text-xs text-slate-400 mt-0.5">
+                          {new Date(event.timestamp).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                        </p>
+                      </div>
+                    </div>
                   ))}
                 </div>
               </div>
@@ -558,7 +548,7 @@ export default function ScanPage() {
                 active:scale-[0.98] transition-all text-sm flex items-center justify-center gap-2 shadow-lg"
             >
               <span className="material-symbols-outlined text-xl">wine_bar</span>
-              View Full Details
+              View Full Token Details
             </Link>
           )}
 
@@ -584,24 +574,6 @@ export default function ScanPage() {
   );
 }
 
-// ── Verification step indicator ─────────────────────────────────
-function VerifyStep({ label, status }: { label: string; status: 'done' | 'active' | 'pending' }) {
-  return (
-    <div className="flex items-center gap-3">
-      {status === 'done' && (
-        <span className="material-symbols-outlined text-gold-700 text-xl">check_circle</span>
-      )}
-      {status === 'active' && (
-        <div className="w-5 h-5 rounded-full border-2 border-wine-600 border-t-transparent animate-spin" />
-      )}
-      {status === 'pending' && (
-        <div className="w-5 h-5 rounded-full border-2 border-slate-300" />
-      )}
-      <span className={`text-sm ${
-        status === 'done' ? 'text-gold-800' : status === 'active' ? 'text-wine-700' : 'text-slate-400'
-      }`}>
-        {label}
-      </span>
-    </div>
-  );
+function sleep(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms));
 }

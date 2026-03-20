@@ -2,11 +2,17 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
 import type { Wine, Action } from "@/types/dual";
+
+const BLOCKSCOUT_BASE = 'https://32f.blockv.io';
+const BSMT_CONTRACT = '0x41Cf00E593c5623B00F812bC70Ee1A737C5aFF06';
 
 function truncateHash(hash: string, length: number = 16): string {
   if (!hash) return '';
-  return hash.length > length ? `${hash.slice(0, length)}...` : hash;
+  if (hash.length <= length) return hash;
+  const half = Math.floor(length / 2);
+  return `${hash.slice(0, half)}...${hash.slice(-half)}`;
 }
 
 function CopyButton({ text, label }: { text: string; label: string }): any {
@@ -26,6 +32,21 @@ function CopyButton({ text, label }: { text: string; label: string }): any {
   );
 }
 
+function BlockscoutLink({ href, label, icon }: { href: string; label: string; icon: string }) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-gradient-to-r from-gold-50 to-gold-100/50 border border-gold-200 hover:border-gold-400 hover:shadow-sm transition text-xs text-gold-800 font-semibold group"
+    >
+      <span className="material-symbols-outlined text-sm text-gold-600">{icon}</span>
+      <span>{label}</span>
+      <span className="material-symbols-outlined text-xs text-gold-400 group-hover:text-gold-600 transition ml-auto">open_in_new</span>
+    </a>
+  );
+}
+
 export default function WineDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -33,6 +54,10 @@ export default function WineDetailPage() {
   const [actions, setActions] = useState<Action[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<"details" | "blockchain" | "tasting">("details");
+  const [showTransfer, setShowTransfer] = useState(false);
+  const [transferAddress, setTransferAddress] = useState('');
+  const [transferring, setTransferring] = useState(false);
+  const [transferResult, setTransferResult] = useState<string | null>(null);
 
   useEffect(() => {
     if (!params.id) return;
@@ -55,14 +80,30 @@ export default function WineDetailPage() {
 
   if (loading)
     return (
-      <div className="min-h-screen bg-background-light flex items-center justify-center">
-        <div className="text-center py-12 text-slate-400 text-sm">Loading...</div>
+      <div className="min-h-screen bg-background-light flex flex-col items-center justify-center gap-3">
+        {/* Skeleton loading */}
+        <div className="w-full max-w-md px-4">
+          <div className="h-[35vh] rounded-b-3xl bg-gradient-to-b from-wine-100 via-wine-50 to-background-light animate-pulse" />
+          <div className="bg-white rounded-2xl -mt-8 mx-2 p-6 space-y-4 shadow-sm">
+            <div className="h-6 bg-slate-200 rounded-lg w-2/3 animate-pulse" />
+            <div className="h-4 bg-slate-100 rounded-lg w-1/2 animate-pulse" />
+            <div className="h-20 bg-slate-100 rounded-xl animate-pulse" />
+            <div className="grid grid-cols-2 gap-3">
+              <div className="h-24 bg-slate-100 rounded-xl animate-pulse" />
+              <div className="h-24 bg-slate-100 rounded-xl animate-pulse" />
+            </div>
+          </div>
+        </div>
       </div>
     );
   if (!wine)
     return (
       <div className="min-h-screen bg-background-light flex items-center justify-center">
-        <div className="text-center py-12 text-slate-400 text-sm">Token not found</div>
+        <div className="text-center py-12">
+          <span className="material-symbols-outlined text-5xl text-slate-300 mb-4 block">search_off</span>
+          <p className="text-slate-400 text-sm">Token not found</p>
+          <Link href="/wallet/browse" className="text-primary-consumer text-sm mt-2 inline-block">Back to marketplace</Link>
+        </div>
       </div>
     );
 
@@ -124,9 +165,22 @@ export default function WineDetailPage() {
               <span className="material-symbols-outlined text-gold-600 text-lg">verified</span>
               <span className="text-sm font-bold text-gold-800">Verified on Blockchain</span>
             </div>
-            <p className="text-xs text-slate-600 leading-relaxed">
-              This wine provenance token is cryptographically verified and anchored on the DUAL Network
+            <p className="text-xs text-slate-600 leading-relaxed mb-3">
+              This wine provenance token is cryptographically verified and anchored on the BLOCKv EVM chain
             </p>
+            {/* Quick Blockscout link */}
+            {wine.explorerLinks?.integrityHash && (
+              <a
+                href={wine.explorerLinks.integrityHash}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-gold-700 hover:text-gold-900 transition"
+              >
+                <span className="material-symbols-outlined text-sm">explore</span>
+                View on Blockscout
+                <span className="material-symbols-outlined text-[11px]">open_in_new</span>
+              </a>
+            )}
           </div>
         )}
 
@@ -177,22 +231,136 @@ export default function WineDetailPage() {
           </div>
         )}
 
+        {/* Action Buttons */}
+        <div className="flex gap-2 mb-6">
+          <Link
+            href={`/api/qr/${wine.objectId}`}
+            target="_blank"
+            className="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-700 font-semibold text-xs hover:bg-slate-50 transition flex items-center justify-center gap-1.5"
+          >
+            <span className="material-symbols-outlined text-base">qr_code</span>
+            QR Code
+          </Link>
+          <button
+            onClick={() => setShowTransfer(true)}
+            className="flex-1 py-2.5 rounded-xl wine-gradient text-white font-semibold text-xs transition flex items-center justify-center gap-1.5 active:scale-[0.98]"
+          >
+            <span className="material-symbols-outlined text-base">swap_horiz</span>
+            Transfer
+          </button>
+          {wine.explorerLinks?.integrityHash && (
+            <a
+              href={wine.explorerLinks.integrityHash}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 py-2.5 rounded-xl gold-gradient text-white font-semibold text-xs transition flex items-center justify-center gap-1.5 active:scale-[0.98]"
+            >
+              <span className="material-symbols-outlined text-base">explore</span>
+              Explorer
+            </a>
+          )}
+        </div>
+
+        {/* Transfer Modal */}
+        {showTransfer && (
+          <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-end justify-center">
+            <div className="bg-white rounded-t-3xl w-full max-w-md p-6 animate-slide-up">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-slate-900">Transfer Token</h3>
+                <button onClick={() => { setShowTransfer(false); setTransferResult(null); }} className="p-2 -mr-2 text-slate-400 hover:text-slate-700">
+                  <span className="material-symbols-outlined">close</span>
+                </button>
+              </div>
+
+              {transferResult ? (
+                <div className="text-center py-6">
+                  <div className="w-16 h-16 rounded-full bg-gold-100 flex items-center justify-center mx-auto mb-4">
+                    <span className="material-symbols-outlined text-3xl text-gold-600">check_circle</span>
+                  </div>
+                  <p className="text-slate-900 font-bold mb-1">Transfer Initiated</p>
+                  <p className="text-slate-500 text-sm mb-4">The token transfer has been submitted to the DUAL network</p>
+                  <code className="block bg-slate-50 px-3 py-2 rounded-lg text-[10px] font-mono text-slate-600 break-all mb-4">{transferResult}</code>
+                  <button
+                    onClick={() => { setShowTransfer(false); setTransferResult(null); }}
+                    className="w-full py-3 rounded-xl gold-gradient text-white font-bold text-sm"
+                  >
+                    Done
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <div className="bg-wine-50 rounded-xl p-3 mb-4 flex items-center gap-3">
+                    <span className="material-symbols-outlined text-wine-600">wine_bar</span>
+                    <div>
+                      <p className="text-sm font-semibold text-slate-900">{d.name}</p>
+                      <p className="text-xs text-slate-500">{d.producer} · {d.vintage}</p>
+                    </div>
+                  </div>
+                  <div className="mb-4">
+                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Recipient Wallet Address</label>
+                    <input
+                      type="text"
+                      value={transferAddress}
+                      onChange={e => setTransferAddress(e.target.value)}
+                      placeholder="0x..."
+                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary-consumer/10 bg-white"
+                    />
+                  </div>
+                  <button
+                    onClick={async () => {
+                      if (!transferAddress) return;
+                      setTransferring(true);
+                      try {
+                        const res = await fetch('/api/transfer', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ objectId: wine.objectId, toAddress: transferAddress }),
+                        });
+                        const data = await res.json();
+                        if (res.ok && data.success) {
+                          setTransferResult(data.actionId || 'Transfer submitted');
+                        } else {
+                          alert(data.error || 'Transfer failed');
+                        }
+                      } catch {
+                        alert('Network error');
+                      } finally {
+                        setTransferring(false);
+                      }
+                    }}
+                    disabled={transferring || !transferAddress}
+                    className="w-full py-3 rounded-xl wine-gradient text-white font-bold text-sm disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {transferring ? (
+                      <div className="w-5 h-5 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                    ) : (
+                      <span className="material-symbols-outlined text-lg">send</span>
+                    )}
+                    {transferring ? 'Transferring...' : 'Confirm Transfer'}
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Tabs */}
         <div className="flex border-b border-slate-200 mb-4">
           {[
-            { key: "details" as const, label: "Details" },
-            { key: "blockchain" as const, label: "Verification" },
-            { key: "tasting" as const, label: "Tasting" },
+            { key: "details" as const, label: "Details", icon: "info" },
+            { key: "blockchain" as const, label: "On-Chain", icon: "link" },
+            { key: "tasting" as const, label: "Tasting", icon: "restaurant" },
           ].map((t: any) => (
             <button
               key={t.key}
               onClick={() => setTab(t.key)}
-              className={`flex-1 py-3 text-sm font-semibold text-center border-b-2 transition-all ${
+              className={`flex-1 py-3 text-sm font-semibold text-center border-b-2 transition-all flex items-center justify-center gap-1.5 ${
                 tab === t.key
                   ? "border-primary-consumer text-primary-consumer"
                   : "border-transparent text-slate-400 hover:text-slate-600"
               }`}
             >
+              <span className="material-symbols-outlined text-base">{t.icon}</span>
               {t.label}
             </button>
           ))}
@@ -257,104 +425,81 @@ export default function WineDetailPage() {
           </div>
         )}
 
-        {/* Blockchain Verification Tab */}
+        {/* Blockchain / On-Chain Tab */}
         {tab === "blockchain" && (
           <div className="space-y-4 pb-4">
-            <div className="bg-gradient-to-r from-gold-50 to-gold-100/50 rounded-2xl p-4 border border-gold-200">
-              <h4 className="text-xs font-bold text-gold-800 uppercase tracking-wider mb-3 flex items-center gap-2">
-                <span className="material-symbols-outlined text-sm">verified</span>
-                Blockchain Verification
-              </h4>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                All token data is cryptographically verified on the DUAL Network and indexed on DUAL
+            {/* Network banner */}
+            <div className="bg-gradient-to-r from-slate-900 to-wine-950 rounded-2xl p-4 border border-slate-700">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                <span className="text-xs font-bold text-white/80 uppercase tracking-wider">Live on BLOCKv EVM</span>
+              </div>
+              <p className="text-white/40 text-xs leading-relaxed">
+                ERC-721 token on BSMT contract. All data is verifiable on Blockscout explorer.
               </p>
             </div>
 
+            {/* Quick Blockscout links */}
+            <div className="space-y-2">
+              {wine.explorerLinks?.integrityHash && (
+                <BlockscoutLink href={wine.explorerLinks.integrityHash} label="Token Instance on Blockscout" icon="token" />
+              )}
+              {wine.explorerLinks?.contentHash && (
+                <BlockscoutLink href={wine.explorerLinks.contentHash} label="Mint Transaction" icon="receipt_long" />
+              )}
+              {wine.explorerLinks?.owner && (
+                <BlockscoutLink href={wine.explorerLinks.owner} label="Owner Wallet" icon="account_balance_wallet" />
+              )}
+              <BlockscoutLink href={`${BLOCKSCOUT_BASE}/token/${BSMT_CONTRACT}`} label="BSMT Contract" icon="description" />
+            </div>
+
+            {/* Hashes */}
             {wine.objectId && (
               <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200">
-                <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">
-                  Object ID
-                </h4>
-                <div className="space-y-2">
-                  <code className="block bg-white px-3 py-2 rounded border border-slate-200 text-[10px] font-mono text-slate-700 break-all">
-                    {wine.objectId}
-                  </code>
-                  {wine.objectId && <CopyButton text={wine.objectId} label="Copy ID" />}
-                </div>
+                <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">Object ID</h4>
+                <code className="block bg-white px-3 py-2 rounded border border-slate-200 text-[10px] font-mono text-slate-700 break-all mb-2">
+                  {wine.objectId}
+                </code>
+                <CopyButton text={wine.objectId} label="Copy ID" />
               </div>
             )}
 
             {wine.contentHash && (
               <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200">
-                <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">
-                  Content Hash
-                </h4>
-                <div className="space-y-2">
-                  <code className="block bg-white px-3 py-2 rounded border border-slate-200 text-[10px] font-mono text-slate-700 break-all">
-                    {wine.contentHash}
-                  </code>
-                  <div className="flex gap-2">
-                    {wine.contentHash && <CopyButton text={wine.contentHash} label="Copy Hash" />}
-                    {wine.explorerLinks?.contentHash && (
-                      <a
-                        href={wine.explorerLinks.contentHash}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-gold-50 border border-gold-200 hover:border-gold-400 hover:bg-gold-100 transition text-xs text-gold-800 font-semibold"
-                      >
-                        <span>Verify on DUAL</span>
-                        <span className="material-symbols-outlined text-xs">open_in_new</span>
-                      </a>
-                    )}
-                  </div>
-                </div>
+                <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">Content Hash</h4>
+                <code className="block bg-white px-3 py-2 rounded border border-slate-200 text-[10px] font-mono text-slate-700 break-all mb-2">
+                  {wine.contentHash}
+                </code>
+                <CopyButton text={wine.contentHash} label="Copy Hash" />
               </div>
             )}
 
             {wine.blockchainTxHash && (
               <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200">
-                <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">
-                  Integrity Hash
-                </h4>
-                <div className="space-y-2">
-                  <code className="block bg-white px-3 py-2 rounded border border-slate-200 text-[10px] font-mono text-slate-700 break-all">
-                    {wine.blockchainTxHash}
-                  </code>
-                  <div className="flex gap-2">
-                    {wine.blockchainTxHash && <CopyButton text={wine.blockchainTxHash} label="Copy Hash" />}
-                    {wine.explorerLinks?.integrityHash && (
-                      <a
-                        href={wine.explorerLinks.integrityHash}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-gold-50 border border-gold-200 hover:border-gold-400 hover:bg-gold-100 transition text-xs text-gold-800 font-semibold"
-                      >
-                        <span>View on DUAL</span>
-                        <span className="material-symbols-outlined text-xs">open_in_new</span>
-                      </a>
-                    )}
-                  </div>
-                </div>
+                <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">Integrity Hash</h4>
+                <code className="block bg-white px-3 py-2 rounded border border-slate-200 text-[10px] font-mono text-slate-700 break-all mb-2">
+                  {wine.blockchainTxHash}
+                </code>
+                <CopyButton text={wine.blockchainTxHash} label="Copy Hash" />
               </div>
             )}
 
             {wine.ownerId && (
               <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200">
-                <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">
-                  Owner Address
-                </h4>
-                <div className="space-y-2">
-                  <code className="block bg-white px-3 py-2 rounded border border-slate-200 text-[10px] font-mono text-slate-500 break-all">
-                    {wine.ownerId}
-                  </code>
+                <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">Owner Wallet</h4>
+                <code className="block bg-white px-3 py-2 rounded border border-slate-200 text-[10px] font-mono text-slate-500 break-all mb-2">
+                  {wine.ownerId}
+                </code>
+                <div className="flex gap-2">
+                  <CopyButton text={wine.ownerId} label="Copy" />
                   {wine.explorerLinks?.owner && (
                     <a
                       href={wine.explorerLinks.owner}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-100 border border-slate-200 hover:border-slate-300 hover:bg-slate-200 transition text-xs text-slate-600 font-semibold"
+                      className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-gold-50 border border-gold-200 hover:border-gold-400 transition text-xs text-gold-800 font-semibold"
                     >
-                      <span>View Owner</span>
+                      <span>Blockscout</span>
                       <span className="material-symbols-outlined text-xs">open_in_new</span>
                     </a>
                   )}
@@ -362,6 +507,41 @@ export default function WineDetailPage() {
               </div>
             )}
 
+            {/* Provenance Timeline */}
+            <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200">
+              <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3 flex items-center gap-2">
+                <span className="material-symbols-outlined text-sm text-wine-600">timeline</span>
+                Provenance Chain
+              </h4>
+              <div className="space-y-0">
+                {wine.provenance.map((event, i) => (
+                  <div key={event.id} className="flex gap-3">
+                    <div className="flex flex-col items-center">
+                      <div className={`w-3 h-3 rounded-full flex-shrink-0 ${
+                        event.verified ? 'bg-gold-500' : 'bg-slate-300'
+                      }`} />
+                      {i < wine.provenance.length - 1 && (
+                        <div className="w-px h-full bg-slate-200 min-h-[28px]" />
+                      )}
+                    </div>
+                    <div className="pb-3 -mt-0.5">
+                      <p className="text-sm font-medium text-slate-900">{event.type.replace(/_/g, ' ')}</p>
+                      <p className="text-xs text-slate-500">{event.description}</p>
+                      <p className="text-xs text-slate-400 mt-0.5">
+                        {new Date(event.timestamp).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                      {event.txHash && (
+                        <p className="text-[10px] font-mono text-slate-400 mt-1">
+                          Hash: {truncateHash(event.txHash, 20)}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Token Timeline */}
             <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200">
               <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">
                 Token Timeline
@@ -377,8 +557,11 @@ export default function WineDetailPage() {
                 </div>
                 {wine.status === 'anchored' && (
                   <div className="flex justify-between pt-2 border-t border-slate-200">
-                    <span className="text-gold-700">Status</span>
-                    <span className="text-gold-700 font-semibold">ANCHORED</span>
+                    <span className="text-gold-700 font-semibold">Status</span>
+                    <span className="text-gold-700 font-semibold flex items-center gap-1">
+                      <span className="material-symbols-outlined text-sm">verified</span>
+                      ANCHORED
+                    </span>
                   </div>
                 )}
               </div>
@@ -425,6 +608,17 @@ export default function WineDetailPage() {
           </div>
         )}
       </div>
+
+      {/* Slide-up animation */}
+      <style jsx>{`
+        @keyframes slide-up {
+          from { transform: translateY(100%); }
+          to { transform: translateY(0); }
+        }
+        .animate-slide-up {
+          animation: slide-up 0.3s ease-out;
+        }
+      `}</style>
     </div>
   );
 }
