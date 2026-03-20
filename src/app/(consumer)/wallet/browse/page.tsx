@@ -153,7 +153,10 @@ export default function MarketplacePage() {
                   {/* Badges */}
                   <div className="flex items-center gap-3 flex-wrap">
                     <span className="px-3 py-1 bg-[#791b3a]/30 backdrop-blur-md border border-[#791b3a]/50 rounded-full text-[9px] md:text-[10px] uppercase tracking-widest font-sans">
-                      {d.type.charAt(0).toUpperCase() + d.type.slice(1)} · {d.region}
+                      {d.type.charAt(0).toUpperCase() + d.type.slice(1)} · {d.varietal}
+                    </span>
+                    <span className="px-3 py-1 bg-white/[0.06] backdrop-blur-md border border-white/[0.08] rounded-full text-[9px] md:text-[10px] uppercase tracking-widest font-sans text-white/50">
+                      {d.condition.replace('_', ' ')} · {d.storage.replace('_', ' ')}
                     </span>
                     {isAnchored && (
                       <div className="flex items-center gap-1 text-[#C5A059]">
@@ -169,39 +172,107 @@ export default function MarketplacePage() {
                       {d.name}
                     </h2>
                     <p className="text-base sm:text-lg md:text-xl lg:text-2xl font-sans font-light text-white/70 max-w-2xl">
-                      {d.description || `A ${d.vintage} ${d.varietal} from ${d.producer} — ${d.region}.`}
+                      {d.description || `A ${d.vintage} ${d.varietal} from ${d.producer} — ${d.region}, ${d.country}.`}
                     </p>
                   </div>
 
-                  {/* Metadata row */}
+                  {/* Primary metadata row */}
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 md:gap-8 pt-6 md:pt-8 border-t border-white/10 max-w-3xl">
                     <div>
                       <span className="block text-[9px] md:text-[10px] uppercase tracking-[0.2em] text-white/35 mb-1">Producer</span>
                       <span className="text-xs md:text-sm font-sans">{d.producer}</span>
                     </div>
                     <div>
-                      <span className="block text-[9px] md:text-[10px] uppercase tracking-[0.2em] text-white/35 mb-1">Value</span>
-                      <span className="text-base md:text-lg font-serif italic text-[#C5A059]">${d.currentValue.toLocaleString()}</span>
+                      <span className="block text-[9px] md:text-[10px] uppercase tracking-[0.2em] text-white/35 mb-1">Region</span>
+                      <span className="text-xs md:text-sm font-sans">{d.region}, {d.country}</span>
                     </div>
                     <div>
                       <span className="block text-[9px] md:text-[10px] uppercase tracking-[0.2em] text-white/35 mb-1">Vintage</span>
                       <span className="text-xs md:text-sm font-sans">{d.vintage}</span>
+                    </div>
+                    <div>
+                      <span className="block text-[9px] md:text-[10px] uppercase tracking-[0.2em] text-white/35 mb-1">ABV · Volume</span>
+                      <span className="text-xs md:text-sm font-sans">{d.abv}% · {d.volume}</span>
+                    </div>
+                  </div>
+
+                  {/* Value + ROI + Drinking Window row */}
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-6 md:gap-8 max-w-4xl">
+                    <div>
+                      <span className="block text-[9px] md:text-[10px] uppercase tracking-[0.2em] text-white/35 mb-1">Current Value</span>
+                      <span className="text-lg md:text-xl font-serif italic text-[#C5A059]">${d.currentValue.toLocaleString()}</span>
+                    </div>
+                    <div>
+                      <span className="block text-[9px] md:text-[10px] uppercase tracking-[0.2em] text-white/35 mb-1">Purchase Price</span>
+                      <span className="text-xs md:text-sm font-sans text-white/60">${d.purchasePrice.toLocaleString()}</span>
+                    </div>
+                    {(() => {
+                      const roi = d.purchasePrice > 0 ? ((d.currentValue - d.purchasePrice) / d.purchasePrice) * 100 : 0;
+                      return (
+                        <div>
+                          <span className="block text-[9px] md:text-[10px] uppercase tracking-[0.2em] text-white/35 mb-1">ROI</span>
+                          <span className={`text-sm md:text-base font-semibold ${roi >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                            {roi >= 0 ? '+' : ''}{roi.toFixed(1)}%
+                          </span>
+                        </div>
+                      );
+                    })()}
+                    <div>
+                      <span className="block text-[9px] md:text-[10px] uppercase tracking-[0.2em] text-white/35 mb-1">Drink Window</span>
+                      <span className="text-xs md:text-sm font-sans">{d.drinkingWindow?.from}–{d.drinkingWindow?.to}</span>
                     </div>
                     <div className="flex items-end">
                       <Link
                         href={`/wallet/browse/${wine.id}`}
                         className="flex items-center gap-2 text-[9px] md:text-[10px] uppercase tracking-[0.3em] font-semibold text-white group hover:text-[#C5A059] transition-colors"
                       >
-                        Explore
+                        Full Details
                         <span className="material-symbols-outlined text-sm group-hover:translate-x-1 transition-transform">arrow_forward</span>
                       </Link>
                     </div>
                   </div>
+
+                  {/* On-chain data strip */}
+                  {(wine.objectId || wine.contentHash || wine.blockchainTxHash) && (
+                    <div className="flex flex-wrap gap-x-6 gap-y-1.5 pt-4 border-t border-white/[0.06] max-w-4xl">
+                      {wine.objectId && (
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[8px] uppercase tracking-[0.15em] text-white/20">Object ID</span>
+                          <span className="text-[10px] font-mono text-white/30">{truncateHash(wine.objectId, 18)}</span>
+                        </div>
+                      )}
+                      {wine.contentHash && (
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[8px] uppercase tracking-[0.15em] text-white/20">Content Hash</span>
+                          <span className="text-[10px] font-mono text-white/30">{truncateHash(wine.contentHash, 18)}</span>
+                        </div>
+                      )}
+                      {wine.blockchainTxHash && (
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[8px] uppercase tracking-[0.15em] text-white/20">Tx Hash</span>
+                          <a
+                            href={`https://32f.blockv.io/tx/${wine.blockchainTxHash}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[10px] font-mono text-[#C5A059]/60 hover:text-[#C5A059] transition"
+                          >
+                            {truncateHash(wine.blockchainTxHash, 18)}
+                          </a>
+                        </div>
+                      )}
+                      {wine.ownerId && (
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[8px] uppercase tracking-[0.15em] text-white/20">Owner</span>
+                          <span className="text-[10px] font-mono text-white/30">{truncateHash(wine.ownerId, 14)}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
 
               {/* Right-side editorial panel (desktop only) */}
-              <div className="absolute right-8 lg:right-12 top-1/2 -translate-y-1/2 hidden lg:block w-64 xl:w-72 space-y-10">
+              <div className="absolute right-8 lg:right-12 top-1/2 -translate-y-1/2 hidden lg:block w-64 xl:w-72 space-y-8">
                 <div className="space-y-3">
                   <h4 className="text-[10px] uppercase tracking-[0.2em] text-[#C5A059] font-semibold border-l-2 border-[#C5A059] pl-4">
                     Terroir Insight
@@ -210,27 +281,62 @@ export default function MarketplacePage() {
                     &ldquo;{terroir}&rdquo;
                   </p>
                 </div>
+                {d.tastingNotes?.nose && (
+                  <div className="space-y-3">
+                    <h4 className="text-[10px] uppercase tracking-[0.2em] text-[#C5A059] font-semibold border-l-2 border-[#C5A059] pl-4">
+                      On the Nose
+                    </h4>
+                    <p className="text-sm text-white/50 leading-relaxed italic">
+                      &ldquo;{d.tastingNotes.nose}&rdquo;
+                    </p>
+                  </div>
+                )}
+                {d.tastingNotes?.palate && (
+                  <div className="space-y-3">
+                    <h4 className="text-[10px] uppercase tracking-[0.2em] text-[#C5A059] font-semibold border-l-2 border-[#C5A059] pl-4">
+                      Palate
+                    </h4>
+                    <p className="text-sm text-white/50 leading-relaxed italic">
+                      &ldquo;{d.tastingNotes.palate}&rdquo;
+                    </p>
+                  </div>
+                )}
+                {d.tastingNotes?.finish && (
+                  <div className="space-y-3">
+                    <h4 className="text-[10px] uppercase tracking-[0.2em] text-[#C5A059] font-semibold border-l-2 border-[#C5A059] pl-4">
+                      Finish
+                    </h4>
+                    <p className="text-sm text-white/50 leading-relaxed italic">
+                      &ldquo;{d.tastingNotes.finish}&rdquo;
+                    </p>
+                  </div>
+                )}
+                {d.ratings && d.ratings.length > 0 && (
+                  <div className="space-y-3">
+                    <h4 className="text-[10px] uppercase tracking-[0.2em] text-[#C5A059] font-semibold border-l-2 border-[#C5A059] pl-4">
+                      Critic Ratings
+                    </h4>
+                    <div className="space-y-1.5">
+                      {d.ratings.map((r, ri) => (
+                        <div key={ri} className="flex justify-between text-[11px]">
+                          <span className="text-white/40">{r.critic}</span>
+                          <span className="font-semibold text-white/60">{r.score}<span className="text-white/25">/100</span></span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 {wine.contentHash && (
                   <div className="space-y-3">
                     <h4 className="text-[10px] uppercase tracking-[0.2em] text-[#C5A059] font-semibold border-l-2 border-[#C5A059] pl-4">
                       Token Identity
                     </h4>
                     <div className="space-y-1.5">
-                      <p className="text-[10px] text-white/30 font-mono">{truncateHash(wine.contentHash, 20)}</p>
+                      <p className="text-[10px] text-white/30 font-mono">{truncateHash(wine.contentHash, 22)}</p>
                       {wine.objectId && (
-                        <p className="text-[10px] text-white/25 font-mono">OBJ: {truncateHash(wine.objectId, 16)}</p>
+                        <p className="text-[10px] text-white/25 font-mono">OBJ: {truncateHash(wine.objectId, 18)}</p>
                       )}
                     </div>
-                  </div>
-                )}
-                {d.tastingNotes?.nose && (
-                  <div className="space-y-3">
-                    <h4 className="text-[10px] uppercase tracking-[0.2em] text-[#C5A059] font-semibold border-l-2 border-[#C5A059] pl-4">
-                      Tasting Note
-                    </h4>
-                    <p className="text-sm text-white/50 leading-relaxed italic">
-                      &ldquo;{d.tastingNotes.nose}&rdquo;
-                    </p>
                   </div>
                 )}
               </div>
