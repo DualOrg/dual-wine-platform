@@ -116,18 +116,25 @@ function extractYear(timestamp: string): number {
 }
 
 // Map DUAL gateway object to Wine (REAL data only)
+// Reads from obj.metadata (template defaults) + obj.custom (mint-time overrides)
 function mapGatewayToWine(obj: any): Wine {
   const m = obj.metadata || {};
-  const year = extractYear(obj.when_created || new Date().toISOString());
+  const c = obj.custom || {};
+  const year = c.vintage ? parseInt(c.vintage, 10) : extractYear(obj.when_created || new Date().toISOString());
 
-  // Determine wine type from category
-  let wineType: any = 'red';
-  const category = (m.category || '').toLowerCase();
-  if (category.includes('white')) wineType = 'white';
-  else if (category.includes('sparkling') || category.includes('champagne')) wineType = 'sparkling';
-  else if (category.includes('rosé') || category.includes('rose')) wineType = 'rosé';
-  else if (category.includes('dessert')) wineType = 'dessert';
-  else if (category.includes('fortified') || category.includes('port')) wineType = 'fortified';
+  // Determine wine type from custom.type or metadata.category
+  let wineType: any = c.type || 'red';
+  if (!c.type) {
+    const category = (m.category || '').toLowerCase();
+    if (category.includes('white')) wineType = 'white';
+    else if (category.includes('sparkling') || category.includes('champagne')) wineType = 'sparkling';
+    else if (category.includes('rosé') || category.includes('rose')) wineType = 'rosé';
+    else if (category.includes('dessert')) wineType = 'dessert';
+    else if (category.includes('fortified') || category.includes('port')) wineType = 'fortified';
+  }
+
+  // Parse drinking window from custom data
+  const dw = c.drinkingWindow || {};
 
   return {
     id: obj.id || '',
@@ -135,25 +142,28 @@ function mapGatewayToWine(obj: any): Wine {
     objectId: obj.id,
     contentHash: obj.content_hash,
     wineData: {
-      name: m.name || 'Token',
-      producer: 'DUAL Network',
-      region: 'On-Chain',
-      country: 'Decentralized',
+      name: m.name || c.name || 'Token',
+      producer: c.producer || 'DUAL Network',
+      region: c.region || 'On-Chain',
+      country: c.country || 'Decentralized',
       vintage: year,
-      varietal: m.category || 'Token',
+      varietal: c.varietal || m.category || 'Token',
       type: wineType,
-      abv: 0,
-      volume: '1 unit',
-      quantity: 1,
-      condition: 'excellent' as any,
-      storage: 'professional' as any,
-      drinkingWindow: { from: year, to: year + 10 },
-      ratings: [],
-      certifications: [],
-      currentValue: 0,
-      purchasePrice: 0,
-      description: m.description || 'DUAL network token',
-      tastingNotes: { nose: '', palate: '', finish: '' },
+      abv: c.abv ? parseFloat(c.abv) : 0,
+      volume: c.volume || '1 unit',
+      quantity: c.quantity ? parseInt(c.quantity, 10) : 1,
+      condition: (c.condition || 'excellent') as any,
+      storage: (c.storage || 'professional') as any,
+      drinkingWindow: {
+        from: dw.from || year,
+        to: dw.to || year + 10,
+      },
+      ratings: c.ratings || [],
+      certifications: c.certifications || [],
+      currentValue: c.currentValue ? parseFloat(c.currentValue) : 0,
+      purchasePrice: c.purchasePrice ? parseFloat(c.purchasePrice) : 0,
+      description: m.description || c.description || 'DUAL network token',
+      tastingNotes: c.tastingNotes || { nose: '', palate: '', finish: '' },
       imageUrl: m.image?.url || undefined,
     },
     provenance: [{

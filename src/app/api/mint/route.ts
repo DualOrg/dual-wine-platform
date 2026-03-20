@@ -9,6 +9,10 @@ export const dynamic = "force-dynamic";
  * Requires prior authentication via /api/auth/login.
  *
  * Body: { templateId?, num?, data? }
+ *
+ * The `data` field is structured into:
+ *   - metadata: { name, description, image } — object-level overrides
+ *   - custom: { vintage, region, varietal, ... } — wine-specific fields
  */
 export async function POST(req: NextRequest) {
   try {
@@ -23,10 +27,32 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const templateId = body.templateId || process.env.DUAL_TEMPLATE_ID || '';
     const num = body.num || 1;
-    const data = body.data || undefined;
+    const rawData = body.data || {};
 
     if (!templateId) {
       return NextResponse.json({ error: "templateId is required" }, { status: 400 });
+    }
+
+    // Structure the data into metadata + custom per DUAL object schema.
+    // The form sends flat wine fields — we re-map them here.
+    const mintData: Record<string, any> = {};
+
+    // metadata overrides (name, description shown on the token)
+    if (rawData.name || rawData.description) {
+      mintData.metadata = {
+        ...(rawData.name ? { name: rawData.name } : {}),
+        ...(rawData.description ? { description: rawData.description } : {}),
+      };
+    }
+
+    // Everything else goes into custom
+    const {
+      name: _n, description: _d, // already mapped to metadata
+      ...customFields
+    } = rawData;
+
+    if (Object.keys(customFields).length > 0) {
+      mintData.custom = customFields;
     }
 
     // Build the action payload per API v3 spec
@@ -35,7 +61,7 @@ export async function POST(req: NextRequest) {
         mint: {
           template_id: templateId,
           num,
-          ...(data ? { data } : {}),
+          ...(Object.keys(mintData).length > 0 ? { data: mintData } : {}),
         },
       },
     };
