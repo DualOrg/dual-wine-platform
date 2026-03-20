@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import type { Wine } from "@/types/dual";
 
@@ -9,217 +9,308 @@ function truncateHash(hash: string, length: number = 8): string {
   return hash.length > length ? `${hash.slice(0, length)}...` : hash;
 }
 
+// Curated background gradients per wine type — evokes terroir
+const typeGradients: Record<string, string> = {
+  red: 'from-[#2D0A15] via-[#4a1228] to-[#1a0510]',
+  white: 'from-[#2a2a18] via-[#3d3820] to-[#1a1a10]',
+  sparkling: 'from-[#1a1025] via-[#2d1a3d] to-[#0f0a18]',
+  'rosé': 'from-[#2d1520] via-[#3d1a2a] to-[#1a0a12]',
+  dessert: 'from-[#2a1a0a] via-[#3d2810] to-[#1a1005]',
+  fortified: 'from-[#1a0a2d] via-[#281540] to-[#0f0520]',
+};
+
+// Accent colors per wine type
+const typeAccents: Record<string, string> = {
+  red: 'text-rose-300',
+  white: 'text-amber-300',
+  sparkling: 'text-violet-300',
+  'rosé': 'text-pink-300',
+  dessert: 'text-orange-300',
+  fortified: 'text-purple-300',
+};
+
+// Terroir descriptions
+const typeTerroir: Record<string, string> = {
+  red: 'Gravelly soils provide the drainage and mineral complexity that defines the character of great reds.',
+  white: 'Limestone and chalk impart a crystalline purity, elevating fruit into something transcendent.',
+  sparkling: 'Cool climate vineyards where acidity is preserved, creating the backbone for elegant effervescence.',
+  'rosé': 'Sun-kissed Mediterranean slopes where warmth and restraint exist in perfect balance.',
+  dessert: 'Late harvest conditions concentrate sugars naturally, yielding wines of extraordinary depth.',
+  fortified: 'Schist and granite terraces where vines struggle and produce intensely concentrated fruit.',
+};
+
 export default function MarketplacePage() {
   const [wines, setWines] = useState<Wine[]>([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
-  const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [activeIndex, setActiveIndex] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetch("/api/wines")
       .then((r: any) => r.json())
       .then((data: any) => {
-        setWines(data);
+        // Sort by value descending for editorial impact
+        const sorted = [...data].sort((a: any, b: any) => b.wineData.currentValue - a.wineData.currentValue);
+        setWines(sorted);
         setLoading(false);
       })
       .catch(() => setLoading(false));
   }, []);
 
-  const filtered = wines
-    .filter((w: any) => typeFilter === "all" || w.wineData.type === typeFilter)
-    .filter(
-      (w: any) =>
-        !search ||
-        w.wineData.name.toLowerCase().includes(search.toLowerCase()) ||
-        w.wineData.producer.toLowerCase().includes(search.toLowerCase()) ||
-        w.wineData.region.toLowerCase().includes(search.toLowerCase())
-    );
+  // Track active section via scroll
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    const handleScroll = () => {
+      const scrollTop = container.scrollTop;
+      const sectionHeight = container.clientHeight;
+      const index = Math.round(scrollTop / sectionHeight);
+      setActiveIndex(index);
+    };
+    container.addEventListener('scroll', handleScroll, { passive: true });
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, [wines]);
 
-  // Featured wines (top 4 by value)
-  const featured = [...wines].sort((a: any, b: any) => b.wineData.currentValue - a.wineData.currentValue).slice(0, 4);
-
-  const typeBadgeColors: Record<string, string> = {
-    red: "bg-red-600/90",
-    white: "bg-amber-500/90",
-    sparkling: "bg-yellow-400/90 text-slate-900",
-    "rosé": "bg-pink-500/90",
-    dessert: "bg-orange-500/90",
-    fortified: "bg-purple-600/90",
+  const scrollToIndex = (index: number) => {
+    const container = containerRef.current;
+    if (!container) return;
+    container.scrollTo({ top: index * container.clientHeight, behavior: 'smooth' });
   };
 
+  if (loading) {
+    return (
+      <div className="fixed inset-0 z-[60] bg-[#0F0F0F] flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="w-16 h-16 rounded-full border-2 border-[#C5A059]/30 border-t-[#C5A059] animate-spin mx-auto" />
+          <p className="text-white/40 text-xs uppercase tracking-[0.3em] font-sans">Loading Collection</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Total sections = wines + final CTA
+  const totalSections = wines.length + 1;
+
   return (
-    <div className="pt-1 pb-20 bg-background-light min-h-screen">
-      {/* DUAL Network Header Banner */}
-      <div className="sticky top-0 z-20 wine-gradient px-4 py-2.5 border-b border-gold-500/30">
-        <div className="flex items-center justify-between text-xs">
+    <div className="fixed inset-0 z-[60] bg-[#0F0F0F] text-white">
+      {/* Glass Nav */}
+      <nav className="fixed top-0 left-0 w-full z-50" style={{ backdropFilter: 'blur(12px)', background: 'rgba(15,15,15,0.6)' }}>
+        <div className="max-w-[1400px] mx-auto px-6 md:px-8 h-16 md:h-20 flex items-center justify-between border-b border-white/5">
           <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-gold-400 text-sm">verified</span>
-            <span className="text-white font-semibold">DUAL Network</span>
-            <span className="text-white/40">·</span>
-            <span className="text-white/70">{wines.length} Wine Tokens</span>
-            <span className="text-white/40">·</span>
-            <span className="text-gold-300 font-medium">DUAL</span>
+            <div className="w-5 h-5 rounded bg-gradient-to-br from-[#791b3a] to-[#d4af37]" />
+            <span className="font-serif italic text-lg md:text-xl tracking-wide">DUAL Vault</span>
           </div>
-          <a
-            href="https://32f.blockv.io"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-gold-400 hover:text-gold-300 transition"
-          >
-            <span className="material-symbols-outlined text-sm">open_in_new</span>
-          </a>
-        </div>
-      </div>
 
-      {/* Sticky Header */}
-      <div className="sticky top-11 z-10 bg-white px-4 pb-4 pt-3 shadow-sm border-b border-slate-100">
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="text-xl font-bold text-slate-900">Wine Tokens</h1>
-          <span className="text-xs text-slate-500">{filtered.length} tokens</span>
-        </div>
-        <div className="flex gap-2">
-          <div className="relative flex-1">
-            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">search</span>
-            <input
-              type="text"
-              placeholder="Search tokens..."
-              value={search}
-              onChange={(e: any) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 rounded-xl bg-white border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-consumer/20 focus:border-primary-consumer"
-            />
+          <div className="hidden md:flex items-center gap-10 text-[10px] uppercase tracking-[0.2em] font-medium text-white/50">
+            <Link href="/" className="hover:text-[#791b3a] transition-colors">Origins</Link>
+            <span className="text-white border-b border-[#791b3a]">Marketplace</span>
+            <Link href="/wallet" className="hover:text-[#791b3a] transition-colors">Cellar</Link>
+            <Link href="/wallet/portfolio" className="hover:text-[#791b3a] transition-colors">Portfolio</Link>
           </div>
-          <button className="w-12 h-12 rounded-xl bg-white border border-slate-200 flex items-center justify-center hover:bg-slate-50">
-            <span className="material-symbols-outlined text-slate-600">tune</span>
-          </button>
-        </div>
-      </div>
 
-      {loading ? (
-        <div className="text-center py-12 text-slate-400 text-sm">Loading wine tokens...</div>
-      ) : (
-        <>
-          {/* Featured Carousel */}
-          {featured.length > 0 && !search && typeFilter === "all" && (
-            <div className="mb-6 px-4 mt-4">
-              <div className="mb-3">
-                <h2 className="text-sm font-bold text-slate-900">Premium Tokens</h2>
+          <div className="flex items-center gap-4">
+            <Link href="/wallet/scan" className="material-symbols-outlined text-white/60 hover:text-white transition-colors text-xl">qr_code_scanner</Link>
+            <div className="h-8 w-px bg-white/10 hidden md:block" />
+            <Link href="/wallet" className="hidden md:flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-white/60 hover:text-white transition-colors">
+              <span className="material-symbols-outlined text-sm">account_balance_wallet</span>
+              Wallet
+            </Link>
+          </div>
+        </div>
+      </nav>
+
+      {/* Snap Scroll Container */}
+      <div
+        ref={containerRef}
+        className="h-screen overflow-y-scroll"
+        style={{ scrollSnapType: 'y mandatory', scrollbarWidth: 'none' }}
+      >
+        {wines.map((wine, i) => {
+          const d = wine.wineData;
+          const gradient = typeGradients[d.type] || typeGradients.red;
+          const accentColor = typeAccents[d.type] || 'text-[#C5A059]';
+          const terroir = typeTerroir[d.type] || typeTerroir.red;
+          const isAnchored = wine.status === 'anchored';
+
+          return (
+            <section
+              key={wine.id}
+              className="h-screen relative overflow-hidden flex-shrink-0"
+              style={{ scrollSnapAlign: 'start' }}
+            >
+              {/* Background gradient */}
+              <div className={`absolute inset-0 bg-gradient-to-br ${gradient}`} />
+
+              {/* Decorative vineyard pattern overlay */}
+              <div className="absolute inset-0 opacity-[0.03]" style={{
+                backgroundImage: `radial-gradient(circle at 20% 50%, rgba(255,255,255,0.1) 0%, transparent 50%),
+                                  radial-gradient(circle at 80% 20%, rgba(197,160,89,0.05) 0%, transparent 40%)`
+              }} />
+
+              {/* Content */}
+              <div className="relative h-full flex flex-col justify-end pb-20 md:pb-24 px-6 md:px-12 lg:px-24">
+                <div className="max-w-4xl space-y-6 md:space-y-8">
+                  {/* Badges */}
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <span className="px-3 py-1 bg-[#791b3a]/30 backdrop-blur-md border border-[#791b3a]/50 rounded-full text-[9px] md:text-[10px] uppercase tracking-widest font-sans">
+                      {d.type.charAt(0).toUpperCase() + d.type.slice(1)} · {d.region}
+                    </span>
+                    {isAnchored && (
+                      <div className="flex items-center gap-1 text-[#C5A059]">
+                        <span className="material-symbols-outlined text-sm">verified</span>
+                        <span className="text-[9px] md:text-[10px] uppercase tracking-widest font-sans">On-Chain Verified</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Wine Name — editorial serif */}
+                  <div className="space-y-2">
+                    <h2 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-serif italic text-white leading-[0.95]">
+                      {d.name}
+                    </h2>
+                    <p className="text-base sm:text-lg md:text-xl lg:text-2xl font-sans font-light text-white/70 max-w-2xl">
+                      {d.description || `A ${d.vintage} ${d.varietal} from ${d.producer} — ${d.region}.`}
+                    </p>
+                  </div>
+
+                  {/* Metadata row */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 md:gap-8 pt-6 md:pt-8 border-t border-white/10 max-w-3xl">
+                    <div>
+                      <span className="block text-[9px] md:text-[10px] uppercase tracking-[0.2em] text-white/35 mb-1">Producer</span>
+                      <span className="text-xs md:text-sm font-sans">{d.producer}</span>
+                    </div>
+                    <div>
+                      <span className="block text-[9px] md:text-[10px] uppercase tracking-[0.2em] text-white/35 mb-1">Value</span>
+                      <span className="text-base md:text-lg font-serif italic text-[#C5A059]">${d.currentValue.toLocaleString()}</span>
+                    </div>
+                    <div>
+                      <span className="block text-[9px] md:text-[10px] uppercase tracking-[0.2em] text-white/35 mb-1">Vintage</span>
+                      <span className="text-xs md:text-sm font-sans">{d.vintage}</span>
+                    </div>
+                    <div className="flex items-end">
+                      <Link
+                        href={`/wallet/browse/${wine.id}`}
+                        className="flex items-center gap-2 text-[9px] md:text-[10px] uppercase tracking-[0.3em] font-semibold text-white group hover:text-[#C5A059] transition-colors"
+                      >
+                        Explore
+                        <span className="material-symbols-outlined text-sm group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                      </Link>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-                {featured.map((wine: any) => (
-                  <Link
-                    key={wine.id}
-                    href={`/wallet/browse/${wine.id}`}
-                    className="flex-shrink-0 w-[220px] rounded-2xl overflow-hidden bg-white border border-slate-200 shadow-md hover:shadow-lg hover:border-primary-consumer/30 transition-all active:scale-[0.97]"
-                  >
-                    <div className="h-40 bg-gradient-to-b from-wine-50 to-white flex flex-col items-center justify-center relative p-4 border-b border-slate-100">
-                      {wine.wineData.imageUrl ? (
-                        <img
-                          src={wine.wineData.imageUrl}
-                          alt={wine.wineData.name}
-                          className="h-28 w-auto object-contain"
-                        />
-                      ) : (
-                        <span className="material-symbols-outlined text-primary-consumer/20 text-6xl">wine_bar</span>
+
+              {/* Right-side editorial panel (desktop only) */}
+              <div className="absolute right-8 lg:right-12 top-1/2 -translate-y-1/2 hidden lg:block w-64 xl:w-72 space-y-10">
+                <div className="space-y-3">
+                  <h4 className="text-[10px] uppercase tracking-[0.2em] text-[#C5A059] font-semibold border-l-2 border-[#C5A059] pl-4">
+                    Terroir Insight
+                  </h4>
+                  <p className="text-sm text-white/50 leading-relaxed italic">
+                    &ldquo;{terroir}&rdquo;
+                  </p>
+                </div>
+                {wine.contentHash && (
+                  <div className="space-y-3">
+                    <h4 className="text-[10px] uppercase tracking-[0.2em] text-[#C5A059] font-semibold border-l-2 border-[#C5A059] pl-4">
+                      Token Identity
+                    </h4>
+                    <div className="space-y-1.5">
+                      <p className="text-[10px] text-white/30 font-mono">{truncateHash(wine.contentHash, 20)}</p>
+                      {wine.objectId && (
+                        <p className="text-[10px] text-white/25 font-mono">OBJ: {truncateHash(wine.objectId, 16)}</p>
                       )}
-                      <div className="absolute top-2 right-2 flex flex-col gap-1.5">
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold text-white ${typeBadgeColors[wine.wineData.type] || "bg-slate-600"}`}>
-                          {wine.wineData.type}
-                        </span>
-                        {wine.status === 'anchored' && (
-                          <span className="px-2 py-0.5 rounded-full text-[9px] font-bold text-gold-700 bg-gold-50 border border-gold-200 flex items-center gap-0.5">
-                            <span className="material-symbols-outlined text-[10px]">verified</span>
-                            ANCHORED
-                          </span>
-                        )}
-                      </div>
                     </div>
-                    <div className="p-3">
-                      <div className="flex items-start justify-between gap-2 mb-2">
-                        <h3 className="text-xs font-bold text-slate-900 flex-1">{wine.wineData.name}</h3>
-                        {wine.objectId && (
-                          <span className="text-[8px] font-mono text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded whitespace-nowrap">
-                            #{truncateHash(wine.objectId, 6)}
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-[10px] text-slate-500 mb-3">{wine.wineData.producer} · {wine.wineData.vintage}</p>
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-bold text-primary-consumer">${wine.wineData.currentValue.toLocaleString()}</span>
-                      </div>
-                    </div>
-                  </Link>
-                ))}
+                  </div>
+                )}
+                {d.tastingNotes?.nose && (
+                  <div className="space-y-3">
+                    <h4 className="text-[10px] uppercase tracking-[0.2em] text-[#C5A059] font-semibold border-l-2 border-[#C5A059] pl-4">
+                      Tasting Note
+                    </h4>
+                    <p className="text-sm text-white/50 leading-relaxed italic">
+                      &ldquo;{d.tastingNotes.nose}&rdquo;
+                    </p>
+                  </div>
+                )}
               </div>
+
+              {/* Section number */}
+              <div className="absolute bottom-10 md:bottom-12 right-6 md:right-12 font-serif italic text-3xl md:text-4xl text-white/[0.06]">
+                {String(i + 1).padStart(2, '0')} / {String(wines.length).padStart(2, '0')}
+              </div>
+
+              {/* Scroll indicator (first section only) */}
+              {i === 0 && (
+                <div className="absolute bottom-6 md:bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-white/20 animate-pulse">
+                  <span className="text-[7px] md:text-[8px] uppercase tracking-[0.5em]">Scroll</span>
+                  <div className="w-px h-8 md:h-12 bg-gradient-to-b from-white/30 to-transparent" />
+                </div>
+              )}
+            </section>
+          );
+        })}
+
+        {/* Final CTA Section */}
+        <section
+          className="h-screen bg-[#0F0F0F] flex items-center justify-center flex-shrink-0"
+          style={{ scrollSnapAlign: 'start' }}
+        >
+          <div className="text-center space-y-8 max-w-lg px-8">
+            <div className="w-16 h-16 mx-auto border border-[#C5A059]/40 rounded-full flex items-center justify-center text-[#C5A059] mb-6">
+              <span className="material-symbols-outlined text-2xl">auto_awesome</span>
             </div>
-          )}
-
-          {/* Type Filter Pills */}
-          <div className="flex gap-2 overflow-x-auto px-4 pb-3 scrollbar-hide mt-2">
-            {["all", "red", "white", "sparkling", "rosé", "dessert", "fortified"].map((t: any) => (
-              <button
-                key={t}
-                onClick={() => setTypeFilter(t)}
-                className={`px-3 py-1.5 rounded-full text-[11px] font-semibold whitespace-nowrap transition-all ${
-                  typeFilter === t
-                    ? "bg-primary-consumer text-white shadow-sm"
-                    : "bg-white text-slate-600 border border-slate-200"
-                }`}
+            <h2 className="text-2xl md:text-3xl font-serif italic text-white">Continue Your Journey</h2>
+            <p className="text-sm text-white/35 font-sans tracking-wide leading-relaxed">
+              Access the complete DUAL Wine Vault collection — {wines.length} verified investment-grade wine tokens, each anchored on the BLOCKv blockchain.
+            </p>
+            <div className="pt-6 grid grid-cols-1 gap-3 max-w-xs mx-auto">
+              <Link
+                href="/wallet"
+                className="bg-[#791b3a] hover:bg-[#791b3a]/80 transition-all py-4 px-10 text-[10px] uppercase tracking-[0.3em] font-bold text-center"
               >
-                {t === "all" ? "All" : t.charAt(0).toUpperCase() + t.slice(1)}
-              </button>
-            ))}
+                View Your Cellar
+              </Link>
+              <Link
+                href="/wallet/scan"
+                className="border border-white/10 hover:bg-white/5 transition-all py-4 px-10 text-[10px] uppercase tracking-[0.3em] font-bold text-white/50 text-center"
+              >
+                Scan &amp; Verify a Bottle
+              </Link>
+              <a
+                href="https://32f.blockv.io"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="border border-white/10 hover:bg-white/5 transition-all py-4 px-10 text-[10px] uppercase tracking-[0.3em] font-bold text-white/50 text-center flex items-center justify-center gap-2"
+              >
+                Blockchain Explorer
+                <span className="material-symbols-outlined text-xs">open_in_new</span>
+              </a>
+            </div>
           </div>
+        </section>
+      </div>
 
-          {/* Wine Grid (responsive) */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 px-4 mt-2">
-            {filtered.map((wine: any) => {
-              const d = wine.wineData;
-              return (
-                <Link
-                  key={wine.id}
-                  href={`/wallet/browse/${wine.id}`}
-                  className="rounded-2xl overflow-hidden bg-white border border-slate-200 hover:border-primary-consumer/30 shadow-sm hover:shadow-md active:scale-[0.97] transition-all"
-                >
-                  <div className="h-32 bg-gradient-to-b from-wine-50 to-white flex flex-col items-center justify-center relative p-3 border-b border-slate-100">
-                    {d.imageUrl ? (
-                      <img
-                        src={d.imageUrl}
-                        alt={d.name}
-                        className="h-20 w-auto object-contain"
-                      />
-                    ) : (
-                      <span className="material-symbols-outlined text-primary-consumer/15 text-4xl">wine_bar</span>
-                    )}
-                    <div className="absolute top-1.5 left-1.5">
-                      <span className={`px-1.5 py-0.5 rounded-full text-[8px] font-bold text-white ${typeBadgeColors[d.type] || "bg-slate-600"}`}>
-                        {d.type}
-                      </span>
-                    </div>
-                    {wine.status === 'anchored' && (
-                      <div className="absolute top-1.5 right-1.5">
-                        <div className="w-5 h-5 rounded-full bg-gold-50 border border-gold-300 flex items-center justify-center">
-                          <span className="material-symbols-outlined text-gold-600 text-xs">verified</span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  <div className="p-3">
-                    <h3 className="text-xs font-bold text-slate-900 truncate">{d.name}</h3>
-                    <p className="text-[9px] text-slate-500 truncate">{d.producer}</p>
-                    {wine.contentHash && (
-                      <p className="text-[7px] text-slate-400 font-mono mt-1 truncate">{truncateHash(wine.contentHash, 12)}</p>
-                    )}
-                    <div className="flex items-center justify-between mt-2">
-                      <span className="text-xs font-bold text-primary-consumer">${d.currentValue.toLocaleString()}</span>
-                      <span className="text-[9px] text-slate-400">{d.vintage}</span>
-                    </div>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        </>
-      )}
+      {/* Pagination dots (desktop) */}
+      <div className="fixed right-6 md:right-8 top-1/2 -translate-y-1/2 flex flex-col gap-4 md:gap-5 z-40 hidden md:flex">
+        {Array.from({ length: totalSections }).map((_, i) => (
+          <button
+            key={i}
+            onClick={() => scrollToIndex(i)}
+            className={`w-2 h-2 rounded-full transition-all duration-300 ${
+              activeIndex === i
+                ? 'bg-[#791b3a] ring-4 ring-[#791b3a]/20 scale-125'
+                : 'bg-white/20 hover:bg-white/40'
+            }`}
+            aria-label={`Go to section ${i + 1}`}
+          />
+        ))}
+      </div>
+
+      {/* Hide scrollbar */}
+      <style jsx>{`
+        div::-webkit-scrollbar { display: none; }
+      `}</style>
     </div>
   );
 }

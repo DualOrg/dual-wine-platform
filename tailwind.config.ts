@@ -43,6 +43,8 @@ const config: Config = {
       },
       fontFamily: {
         display: ["Inter", "sans-serif"],
+        serif: ["Playfair Display", "serif"],
+        sans: ["Inter", "sans-serif"],
       },
     },
   },
