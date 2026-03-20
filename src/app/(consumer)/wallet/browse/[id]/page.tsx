@@ -6,7 +6,7 @@ import Link from "next/link";
 import type { Wine, Action } from "@/types/dual";
 
 const BLOCKSCOUT_BASE = 'https://32f.blockv.io';
-const BSMT_CONTRACT = '0x41Cf00E593c5623B00F812bC70Ee1A737C5aFF06';
+const DUAL_CONTRACT = '0x41Cf00E593c5623B00F812bC70Ee1A737C5aFF06';
 
 function truncateHash(hash: string, length: number = 16): string {
   if (!hash) return '';
@@ -164,7 +164,7 @@ export default function WineDetailPage() {
                 <span className="text-sm font-semibold text-[#C5A059]">Verified on Blockchain</span>
               </div>
               <p className="text-xs text-white/35 leading-relaxed mb-2">
-                Cryptographically verified and anchored on the BLOCKv EVM chain.
+                Cryptographically verified and anchored on the DUAL Network.
               </p>
               {wine.explorerLinks?.integrityHash && (
                 <a href={wine.explorerLinks.integrityHash} target="_blank" rel="noopener noreferrer"
@@ -384,9 +384,9 @@ export default function WineDetailPage() {
               <div className="bg-gradient-to-r from-[#1a1a2e] to-[#16213e] rounded-xl p-4 border border-white/[0.06]">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                  <span className="text-[9px] font-bold text-white/60 uppercase tracking-[0.2em]">Live on BLOCKv EVM</span>
+                  <span className="text-[9px] font-bold text-white/60 uppercase tracking-[0.2em]">Live on DUAL Network</span>
                 </div>
-                <p className="text-white/25 text-xs">ERC-721 token on BSMT contract. Verifiable on Blockscout.</p>
+                <p className="text-white/25 text-xs">ERC-721 token on DUAL Token contract. Verifiable on Blockscout.</p>
               </div>
 
               <div className="space-y-2">
@@ -399,7 +399,7 @@ export default function WineDetailPage() {
                 {wine.explorerLinks?.owner && (
                   <BlockscoutLink href={wine.explorerLinks.owner} label="Owner Wallet" icon="account_balance_wallet" />
                 )}
-                <BlockscoutLink href={`${BLOCKSCOUT_BASE}/token/${BSMT_CONTRACT}`} label="BSMT Contract" icon="description" />
+                <BlockscoutLink href={`${BLOCKSCOUT_BASE}/token/${DUAL_CONTRACT}`} label="DUAL Token Contract" icon="description" />
               </div>
 
               {wine.objectId && (

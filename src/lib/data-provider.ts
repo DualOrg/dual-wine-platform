@@ -14,7 +14,7 @@ import { v4 as uuidv4 } from "uuid";
 
 // ─── Blockscout Resolver ───
 // Matches DUAL objects to on-chain token instances via integrity_hash
-const BSMT_CONTRACT = '0x41Cf00E593c5623B00F812bC70Ee1A737C5aFF06';
+const DUAL_CONTRACT = '0x41Cf00E593c5623B00F812bC70Ee1A737C5aFF06';
 const BLOCKSCOUT_BASE = 'https://32f.blockv.io';
 
 interface BlockscoutLinks {
@@ -33,7 +33,7 @@ async function resolveBlockscoutLinks(ownerAddress: string): Promise<Map<string,
   const map = new Map<string, BlockscoutLinks>();
   try {
     // Single API call: get all token instances owned by this address (includes metadata with integrity_hash)
-    const instUrl = `${BLOCKSCOUT_BASE}/api/v2/tokens/${BSMT_CONTRACT}/instances?holder_address_hash=${ownerAddress}`;
+    const instUrl = `${BLOCKSCOUT_BASE}/api/v2/tokens/${DUAL_CONTRACT}/instances?holder_address_hash=${ownerAddress}`;
     const instRes = await fetch(instUrl);
     if (!instRes.ok) return map;
     const instData = await instRes.json();
@@ -69,7 +69,7 @@ async function resolveBlockscoutLinks(ownerAddress: string): Promise<Map<string,
         txHash,
         tokenId,
         txUrl: txHash ? `${BLOCKSCOUT_BASE}/tx/${txHash}` : null,
-        tokenInstanceUrl: `${BLOCKSCOUT_BASE}/token/${BSMT_CONTRACT}/instance/${tokenId}`,
+        tokenInstanceUrl: `${BLOCKSCOUT_BASE}/token/${DUAL_CONTRACT}/instance/${tokenId}`,
       });
     }
   } catch { /* Blockscout unavailable — return empty map */ }

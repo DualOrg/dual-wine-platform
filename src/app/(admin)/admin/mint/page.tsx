@@ -15,7 +15,7 @@ type MintStep = {
 };
 
 const BLOCKSCOUT_BASE = 'https://32f.blockv.io';
-const BSMT_CONTRACT = '0x41Cf00E593c5623B00F812bC70Ee1A737C5aFF06';
+const DUAL_CONTRACT = '0x41Cf00E593c5623B00F812bC70Ee1A737C5aFF06';
 
 export default function MintWinePage() {
   const router = useRouter();
@@ -108,9 +108,9 @@ export default function MintWinePage() {
     const steps: MintStep[] = [
       { id: 'prepare', label: 'Preparing Token Data', description: 'Structuring wine metadata for on-chain storage', icon: 'data_object', status: 'pending' },
       { id: 'auth', label: 'Authenticating with DUAL', description: 'Verifying org-scoped JWT credentials', icon: 'shield', status: 'pending' },
-      { id: 'mint', label: 'Minting ERC-721 Token', description: 'Writing to BLOCKv EVM via /ebus/execute', icon: 'token', status: 'pending' },
+      { id: 'mint', label: 'Minting ERC-721 Token', description: 'Writing to DUAL Network via /ebus/execute', icon: 'token', status: 'pending' },
       { id: 'anchor', label: 'Anchoring Content Hash', description: 'Computing integrity hash and anchoring on-chain', icon: 'link', status: 'pending' },
-      { id: 'confirm', label: 'Confirmed on Blockchain', description: 'Token verified on BSMT contract', icon: 'verified', status: 'pending' },
+      { id: 'confirm', label: 'Confirmed on Blockchain', description: 'Token verified on DUAL Token contract', icon: 'verified', status: 'pending' },
     ];
     setMintSteps(steps);
     setMintPhase('minting');
@@ -438,7 +438,7 @@ export default function MintWinePage() {
           {/* Network badge */}
           <div className="mt-10 flex items-center justify-center gap-2">
             <div className="w-2 h-2 rounded-full bg-gold-500 animate-pulse" />
-            <span className="text-white/30 text-xs font-mono">DUAL Network · BLOCKv EVM · BSMT Contract</span>
+            <span className="text-white/30 text-xs font-mono">DUAL Network · DUAL Token Contract</span>
           </div>
         </div>
 
@@ -460,7 +460,7 @@ export default function MintWinePage() {
     const objectUrl = `/wallet/browse/${objectId}`;
     const qrUrl = `/api/qr/${objectId}`;
     const explorerUrl = mintResult.ownerWallet ? `${BLOCKSCOUT_BASE}/address/${mintResult.ownerWallet}` : null;
-    const contractUrl = `${BLOCKSCOUT_BASE}/token/${BSMT_CONTRACT}`;
+    const contractUrl = `${BLOCKSCOUT_BASE}/token/${DUAL_CONTRACT}`;
 
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-950 via-wine-950 to-slate-950 flex items-center justify-center">
@@ -492,8 +492,8 @@ export default function MintWinePage() {
               {mintResult.integrityHash && <DetailRow label="Integrity Hash" value={mintResult.integrityHash} mono />}
               {mintResult.ownerWallet && <DetailRow label="Owner Wallet" value={mintResult.ownerWallet} mono />}
               <div className="h-px bg-white/10 my-2" />
-              <DetailRow label="Contract" value="BSMT (ERC-721)" />
-              <DetailRow label="Chain" value="BLOCKv EVM" />
+              <DetailRow label="Contract" value="DUAL Token (ERC-721)" />
+              <DetailRow label="Chain" value="DUAL Network" />
             </div>
           </div>
 
@@ -518,7 +518,7 @@ export default function MintWinePage() {
                 className="flex items-center justify-between px-4 py-2.5 rounded-xl bg-gold-500/10 border border-gold-500/20 hover:border-gold-500/40 hover:bg-gold-500/15 transition group">
                 <div className="flex items-center gap-2">
                   <span className="material-symbols-outlined text-gold-400 text-lg">token</span>
-                  <span className="text-gold-200 text-sm font-medium">BSMT Contract</span>
+                  <span className="text-gold-200 text-sm font-medium">DUAL Token Contract</span>
                 </div>
                 <span className="material-symbols-outlined text-gold-400/60 text-lg group-hover:text-gold-400 transition">open_in_new</span>
               </a>
@@ -566,7 +566,7 @@ export default function MintWinePage() {
           {/* Network badge */}
           <div className="mt-8 flex items-center justify-center gap-2">
             <div className="w-2 h-2 rounded-full bg-green-500" />
-            <span className="text-white/30 text-xs font-mono">Transaction confirmed on BLOCKv EVM</span>
+            <span className="text-white/30 text-xs font-mono">Transaction confirmed on DUAL Network</span>
           </div>
         </div>
       </div>

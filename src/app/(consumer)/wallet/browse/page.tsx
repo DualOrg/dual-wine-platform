@@ -262,7 +262,7 @@ export default function MarketplacePage() {
             </div>
             <h2 className="text-2xl md:text-3xl font-serif italic text-white">Continue Your Journey</h2>
             <p className="text-sm text-white/35 font-sans tracking-wide leading-relaxed">
-              Access the complete DUAL Wine Vault collection — {wines.length} verified investment-grade wine tokens, each anchored on the BLOCKv blockchain.
+              Access the complete DUAL Wine Vault collection — {wines.length} verified investment-grade wine tokens, each anchored on the DUAL Network.
             </p>
             <div className="pt-6 grid grid-cols-1 gap-3 max-w-xs mx-auto">
               <Link

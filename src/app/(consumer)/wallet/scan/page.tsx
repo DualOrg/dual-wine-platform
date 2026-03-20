@@ -15,7 +15,7 @@ type VerifyResult = {
 };
 
 const BLOCKSCOUT_BASE = 'https://32f.blockv.io';
-const BSMT_CONTRACT = '0x41Cf00E593c5623B00F812bC70Ee1A737C5aFF06';
+const DUAL_CONTRACT = '0x41Cf00E593c5623B00F812bC70Ee1A737C5aFF06';
 
 const wineTypeEmoji: Record<string, string> = {
   red: '\u{1F377}', white: '\u{1F942}', sparkling: '\u{1F37E}',
