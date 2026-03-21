@@ -45,14 +45,20 @@ export async function POST(req: NextRequest) {
       };
     }
 
-    // Everything else goes into custom
+    // Everything else goes into custom.
+    // Also keep name/description in custom so the data provider can read them
+    // (template metadata may override object-level metadata on read).
     const {
       name: _n, description: _d, // already mapped to metadata
       ...customFields
     } = rawData;
 
-    if (Object.keys(customFields).length > 0) {
-      mintData.custom = customFields;
+    const custom: Record<string, any> = { ...customFields };
+    if (rawData.name) custom.name = rawData.name;
+    if (rawData.description) custom.description = rawData.description;
+
+    if (Object.keys(custom).length > 0) {
+      mintData.custom = custom;
     }
 
     // Build the action payload per API v3 spec

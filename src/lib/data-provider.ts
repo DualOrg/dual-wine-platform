@@ -142,7 +142,7 @@ function mapGatewayToWine(obj: any): Wine {
     objectId: obj.id,
     contentHash: obj.content_hash,
     wineData: {
-      name: m.name || c.name || 'Token',
+      name: c.name || m.name || 'Token',
       producer: c.producer || 'DUAL Network',
       region: c.region || 'On-Chain',
       country: c.country || 'Decentralized',
@@ -162,7 +162,7 @@ function mapGatewayToWine(obj: any): Wine {
       certifications: c.certifications || [],
       currentValue: c.currentValue ? parseFloat(c.currentValue) : 0,
       purchasePrice: c.purchasePrice ? parseFloat(c.purchasePrice) : 0,
-      description: m.description || c.description || 'DUAL network token',
+      description: c.description || m.description || 'DUAL network token',
       tastingNotes: c.tastingNotes || { nose: '', palate: '', finish: '' },
       imageUrl: m.image?.url || c.imageUrl || undefined,
       videoUrl: c.videoUrl || undefined,
