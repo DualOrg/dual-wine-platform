@@ -14,6 +14,14 @@ const config: Config = {
         accent: "#d4af37",
         "background-light": "#faf7f3",
         surface: "#ffffff",
+        // Vault dark theme
+        "vault-bg": "#0e0e0e",
+        "vault-surface": "#1a1617",
+        "vault-outline": "#3d2a2e",
+        "burgundy-deep": "#430a1d",
+        "burgundy-accent": "#791b3a",
+        "gold-primary": "#d4af37",
+        "gold-dim": "#e9c349",
         wine: {
           50: "#fdf2f4",
           100: "#fce7eb",

@@ -396,28 +396,21 @@ export default function MintWinePage() {
 
   if (authState === 'unauthenticated' || authState === 'otp_sent') {
     return (
-      <div>
-        <header className="h-20 flex items-center justify-between px-8 bg-surface border-b border-slate-200">
-          <div className="flex items-center gap-2 text-sm">
-            <span className="text-slate-500">Admin</span>
-            <span className="material-symbols-outlined text-xs text-slate-400">chevron_right</span>
-            <span className="text-primary font-semibold">Authenticate</span>
-          </div>
-        </header>
-        <div className="p-8 max-w-md mx-auto">
-          <div className="bg-surface rounded-xl shadow-sm border border-slate-200 p-8">
-            <div className="w-16 h-16 rounded-full bg-wine-50 flex items-center justify-center mx-auto mb-6">
-              <span className="material-symbols-outlined text-wine-700 text-3xl">lock</span>
+      <div className="flex items-center justify-center h-full">
+        <div className="w-full max-w-md px-6">
+          <div className="bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10 p-8">
+            <div className="w-16 h-16 rounded-full bg-burgundy-accent/30 flex items-center justify-center mx-auto mb-6">
+              <span className="material-symbols-outlined text-gold-dim text-3xl">lock</span>
             </div>
-            <h2 className="text-xl font-bold text-slate-900 text-center mb-2">DUAL Network Auth</h2>
-            <p className="text-sm text-slate-500 text-center mb-6">
+            <h2 className="text-xl font-bold text-white text-center mb-2">DUAL Network Auth</h2>
+            <p className="text-sm text-white/50 text-center mb-6">
               {authState === 'unauthenticated'
                 ? 'Enter your email to receive a one-time code for minting tokens.'
                 : `Enter the OTP code sent to ${email}`}
             </p>
 
             {authError && (
-              <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
+              <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
                 {authError}
               </div>
             )}
@@ -425,19 +418,19 @@ export default function MintWinePage() {
             {authState === 'unauthenticated' ? (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Email</label>
+                  <label className="block text-xs font-bold text-white/40 uppercase tracking-wider mb-1.5">Email</label>
                   <input
                     type="email"
                     value={email}
                     onChange={e => setEmail(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary/30 bg-white"
+                    className="w-full px-4 py-2.5 rounded-xl border border-white/10 text-sm focus:outline-none focus:ring-2 focus:ring-gold-dim/20 focus:border-gold-dim/30 bg-white/5 text-white placeholder-white/30"
                     placeholder="admin@example.com"
                   />
                 </div>
                 <button
                   onClick={handleSendOtp}
                   disabled={authLoading || !email}
-                  className="w-full py-3 rounded-xl wine-gradient text-white font-bold text-sm shadow-lg hover:opacity-90 transition disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="w-full py-3 rounded-xl bg-burgundy-accent text-white font-bold text-sm shadow-lg hover:opacity-90 transition disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   {authLoading ? (
                     <div className="w-5 h-5 rounded-full border-2 border-white border-t-transparent animate-spin" />
@@ -450,12 +443,12 @@ export default function MintWinePage() {
             ) : (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Verification Code</label>
+                  <label className="block text-xs font-bold text-white/40 uppercase tracking-wider mb-1.5">Verification Code</label>
                   <input
                     type="text"
                     value={otp}
                     onChange={e => setOtp(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary/30 bg-white text-center tracking-[0.3em] font-mono text-lg"
+                    className="w-full px-4 py-2.5 rounded-xl border border-white/10 text-sm focus:outline-none focus:ring-2 focus:ring-gold-dim/20 focus:border-gold-dim/30 bg-white/5 text-white text-center tracking-[0.3em] font-mono text-lg placeholder-white/30"
                     placeholder="Enter code"
                     autoFocus
                   />
@@ -463,7 +456,7 @@ export default function MintWinePage() {
                 <button
                   onClick={handleLogin}
                   disabled={authLoading || !otp}
-                  className="w-full py-3 rounded-xl gold-gradient text-white font-bold text-sm shadow-lg shadow-accent/20 hover:opacity-90 transition disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="w-full py-3 rounded-xl bg-gold-dim text-burgundy-deep font-bold text-sm shadow-lg shadow-gold-dim/20 hover:opacity-90 transition disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   {authLoading ? (
                     <div className="w-5 h-5 rounded-full border-2 border-white border-t-transparent animate-spin" />
@@ -474,7 +467,7 @@ export default function MintWinePage() {
                 </button>
                 <button
                   onClick={() => { setAuthState('unauthenticated'); setOtp(''); setAuthError(''); }}
-                  className="w-full py-2 text-slate-500 text-sm hover:text-slate-700 transition"
+                  className="w-full py-2 text-white/40 text-sm hover:text-white/70 transition"
                 >
                   Back to email
                 </button>
@@ -738,41 +731,33 @@ export default function MintWinePage() {
   }
 
   // ── Mint Form ──
-  const inputClass = "w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary/30 bg-white";
-  const labelClass = "block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5";
+  const inputClass = "w-full px-4 py-2.5 rounded-xl border border-white/10 text-sm focus:outline-none focus:ring-2 focus:ring-gold-dim/20 focus:border-gold-dim/30 bg-white/5 text-white placeholder-white/30";
+  const labelClass = "block text-xs font-bold text-white/40 uppercase tracking-wider mb-1.5";
 
   return (
-    <div>
-      <header className="h-20 flex items-center justify-between px-8 bg-surface border-b border-slate-200">
-        <div className="flex items-center gap-2 text-sm">
-          <span className="text-slate-500">Admin</span>
-          <span className="material-symbols-outlined text-xs text-slate-400">chevron_right</span>
-          <span className="text-primary font-semibold">Mint Wine</span>
-        </div>
-        <div className="flex items-center gap-3">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-50 border border-green-200 rounded-full text-xs font-semibold text-green-700">
-            <span className="w-2 h-2 rounded-full bg-green-500" />
+    <div className="px-6 py-10 lg:px-24">
+      <div className="max-w-4xl mx-auto">
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-white">Mint New Token</h1>
+            <p className="text-sm text-white/40 mt-1">Create a new tokenised asset on the DUAL network</p>
+          </div>
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-500/10 border border-green-500/20 rounded-full text-xs font-semibold text-green-400">
+            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
             Authenticated
           </span>
         </div>
-      </header>
-
-      <div className="p-8">
-        <div className="mb-6">
-          <h1 className="text-xl font-bold text-slate-900">Mint New Token</h1>
-          <p className="text-sm text-slate-500">Create a new tokenised asset on the DUAL network</p>
-        </div>
 
         {/* Token Mode Toggle */}
-        <div className="mb-6 max-w-4xl">
-          <div className="inline-flex rounded-xl border border-slate-200 overflow-hidden">
+        <div className="mb-6">
+          <div className="inline-flex rounded-xl border border-white/10 overflow-hidden">
             <button
               type="button"
               onClick={() => setTokenMode('wine')}
               className={`px-5 py-2.5 text-sm font-semibold flex items-center gap-2 transition ${
                 tokenMode === 'wine'
-                  ? 'bg-wine-700 text-white'
-                  : 'bg-white text-slate-500 hover:bg-slate-50'
+                  ? 'bg-burgundy-accent text-white'
+                  : 'bg-white/5 text-white/40 hover:text-white hover:bg-white/10'
               }`}
             >
               <span className="material-symbols-outlined text-lg">wine_bar</span>
@@ -783,8 +768,8 @@ export default function MintWinePage() {
               onClick={() => setTokenMode('video')}
               className={`px-5 py-2.5 text-sm font-semibold flex items-center gap-2 transition ${
                 tokenMode === 'video'
-                  ? 'bg-gradient-to-r from-amber-600 to-amber-700 text-white'
-                  : 'bg-white text-slate-500 hover:bg-slate-50'
+                  ? 'bg-gradient-to-r from-gold-primary to-gold-dim text-burgundy-deep'
+                  : 'bg-white/5 text-white/40 hover:text-white hover:bg-white/10'
               }`}
             >
               <span className="material-symbols-outlined text-lg">videocam</span>
@@ -794,15 +779,15 @@ export default function MintWinePage() {
         </div>
 
         {mintError && (
-          <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm max-w-4xl">
+          <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
             {mintError}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="max-w-4xl space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
           {/* AI Asset Generation — always shown */}
-          <div className="bg-surface rounded-xl shadow-sm border border-amber-200 p-6">
-            <h3 className="text-sm font-bold text-slate-900 mb-1 flex items-center gap-2">
+          <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-gold-dim/20 p-6">
+            <h3 className="text-sm font-bold text-white mb-1 flex items-center gap-2">
               <span className="material-symbols-outlined text-amber-600 text-lg">auto_awesome</span>
               AI-Generated Assets
               <span className="text-[10px] font-normal text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">Google Gemini</span>
@@ -816,15 +801,15 @@ export default function MintWinePage() {
               <button
                 type="button"
                 onClick={handleGenerateAssets}
-                className="w-full border-2 border-dashed border-amber-300 rounded-xl py-10 flex flex-col items-center gap-3 hover:border-amber-500 hover:bg-amber-50/50 transition group"
+                className="w-full border-2 border-dashed border-gold-dim/30 rounded-xl py-10 flex flex-col items-center gap-3 hover:border-gold-dim/60 hover:bg-white/5 transition group"
               >
                 <div className="w-14 h-14 rounded-full bg-gradient-to-br from-amber-500 to-amber-700 flex items-center justify-center shadow-lg shadow-amber-500/20 group-hover:scale-105 transition">
                   <span className="material-symbols-outlined text-2xl text-white">auto_awesome</span>
                 </div>
-                <span className="text-sm font-semibold text-amber-700">
+                <span className="text-sm font-semibold text-gold-dim">
                   Generate {tokenMode === 'video' ? 'Image & Video' : 'Product Image'} from Metadata
                 </span>
-                <span className="text-xs text-slate-400">
+                <span className="text-xs text-white/40">
                   Uses wine name, region, vintage, tasting notes &amp; more
                 </span>
               </button>
@@ -832,7 +817,7 @@ export default function MintWinePage() {
 
             {/* Generation progress */}
             {generating && (
-              <div className="w-full rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 py-8 flex flex-col items-center gap-4">
+              <div className="w-full rounded-xl bg-white/5 border border-gold-dim/20 py-8 flex flex-col items-center gap-4">
                 <div className="relative w-16 h-16">
                   <div className="absolute inset-0 rounded-full border-2 border-amber-500/20" />
                   <div className="absolute inset-0 rounded-full border-2 border-t-amber-600 border-r-transparent border-b-transparent border-l-transparent animate-spin" style={{ animationDuration: '1.5s' }} />
@@ -844,26 +829,26 @@ export default function MintWinePage() {
                   </div>
                 </div>
                 <div className="text-center">
-                  <p className="text-sm font-semibold text-amber-800">
+                  <p className="text-sm font-semibold text-gold-dim">
                     {genPhase === 'image' ? 'Generating Product Image...' : 'Generating Cinematic Video...'}
                   </p>
-                  <p className="text-xs text-amber-600 mt-1">
+                  <p className="text-xs text-white/50 mt-1">
                     {genPhase === 'image' ? 'Gemini is creating your wine product image' : 'Gemini Veo is rendering your cinematic clip'}
                   </p>
                 </div>
                 {/* Progress indicators */}
                 <div className="flex items-center gap-3 mt-1">
                   <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${
-                    genPhase === 'image' ? 'bg-amber-200 text-amber-800 animate-pulse' :
-                    imageUrl ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-400'
+                    genPhase === 'image' ? 'bg-gold-dim/20 text-gold-dim animate-pulse' :
+                    imageUrl ? 'bg-green-500/10 text-green-400' : 'bg-white/5 text-white/30'
                   }`}>
                     <span className="material-symbols-outlined text-xs">{imageUrl ? 'check_circle' : 'image'}</span>
                     Image
                   </div>
                   {tokenMode === 'video' && (
                     <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${
-                      genPhase === 'video' ? 'bg-amber-200 text-amber-800 animate-pulse' :
-                      videoUrl ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-400'
+                      genPhase === 'video' ? 'bg-gold-dim/20 text-gold-dim animate-pulse' :
+                      videoUrl ? 'bg-green-500/10 text-green-400' : 'bg-white/5 text-white/30'
                     }`}>
                       <span className="material-symbols-outlined text-xs">{videoUrl ? 'check_circle' : 'videocam'}</span>
                       Video
@@ -885,11 +870,11 @@ export default function MintWinePage() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <span className="material-symbols-outlined text-green-600 text-sm">check_circle</span>
-                        <span className="text-xs font-semibold text-slate-700">AI Product Image</span>
+                        <span className="text-xs font-semibold text-white/70">AI Product Image</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <button type="button" onClick={handleGenerateImage}
-                          className="text-xs text-amber-600 hover:text-amber-800 transition flex items-center gap-1">
+                          className="text-xs text-gold-dim hover:text-gold-primary transition flex items-center gap-1">
                           <span className="material-symbols-outlined text-xs">refresh</span>
                           Regenerate
                         </button>
@@ -899,13 +884,13 @@ export default function MintWinePage() {
                         </button>
                       </div>
                     </div>
-                    <div className="rounded-xl overflow-hidden bg-slate-100 border border-slate-200">
+                    <div className="rounded-xl overflow-hidden bg-white/5 border border-white/10">
                       <img src={imageUrl} alt="AI generated wine" className="w-full max-h-72 object-contain mx-auto" />
                     </div>
                     {imagePrompt && (
                       <details className="text-xs">
-                        <summary className="text-slate-400 cursor-pointer hover:text-slate-600 transition">View image prompt</summary>
-                        <p className="mt-2 p-3 rounded-lg bg-slate-50 border border-slate-200 text-slate-500 leading-relaxed">{imagePrompt}</p>
+                        <summary className="text-white/30 cursor-pointer hover:text-white/60 transition">View image prompt</summary>
+                        <p className="mt-2 p-3 rounded-lg bg-white/5 border border-white/10 text-white/40 leading-relaxed">{imagePrompt}</p>
                       </details>
                     )}
                   </div>
@@ -917,11 +902,11 @@ export default function MintWinePage() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <span className="material-symbols-outlined text-green-600 text-sm">check_circle</span>
-                        <span className="text-xs font-semibold text-slate-700">AI Cinematic Video</span>
+                        <span className="text-xs font-semibold text-white/70">AI Cinematic Video</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <button type="button" onClick={handleGenerateVideo}
-                          className="text-xs text-amber-600 hover:text-amber-800 transition flex items-center gap-1">
+                          className="text-xs text-gold-dim hover:text-gold-primary transition flex items-center gap-1">
                           <span className="material-symbols-outlined text-xs">refresh</span>
                           Regenerate
                         </button>
@@ -936,8 +921,8 @@ export default function MintWinePage() {
                     </div>
                     {videoPrompt && (
                       <details className="text-xs">
-                        <summary className="text-slate-400 cursor-pointer hover:text-slate-600 transition">View video prompt</summary>
-                        <p className="mt-2 p-3 rounded-lg bg-slate-50 border border-slate-200 text-slate-500 leading-relaxed">{videoPrompt}</p>
+                        <summary className="text-white/30 cursor-pointer hover:text-white/60 transition">View video prompt</summary>
+                        <p className="mt-2 p-3 rounded-lg bg-white/5 border border-white/10 text-white/40 leading-relaxed">{videoPrompt}</p>
                       </details>
                     )}
                   </div>
@@ -947,8 +932,8 @@ export default function MintWinePage() {
           </div>
 
           {/* Wine Information */}
-          <div className="bg-surface rounded-xl shadow-sm border border-slate-200 p-6">
-            <h3 className="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
+          <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-6">
+            <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
               <span className="material-symbols-outlined text-primary text-lg">{tokenMode === 'video' ? 'info' : 'wine_bar'}</span>
               {tokenMode === 'video' ? 'Token Information' : 'Wine Information'}
             </h3>
@@ -983,8 +968,8 @@ export default function MintWinePage() {
           </div>
 
           {/* Valuation & Storage */}
-          <div className="bg-surface rounded-xl shadow-sm border border-slate-200 p-6">
-            <h3 className="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
+          <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-6">
+            <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
               <span className="material-symbols-outlined text-green-600 text-lg">payments</span>
               Valuation & Storage
             </h3>
@@ -1007,8 +992,8 @@ export default function MintWinePage() {
           </div>
 
           {/* Tasting Notes */}
-          <div className="bg-surface rounded-xl shadow-sm border border-slate-200 p-6">
-            <h3 className="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
+          <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-6">
+            <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
               <span className="material-symbols-outlined text-amber-600 text-lg">restaurant</span>
               Tasting Notes
             </h3>
@@ -1022,7 +1007,7 @@ export default function MintWinePage() {
           <button
             type="submit"
             disabled={submitting}
-            className="w-full py-3.5 rounded-xl gold-gradient text-white font-bold text-sm shadow-lg shadow-accent/20 hover:opacity-90 transition disabled:opacity-50 flex items-center justify-center gap-2"
+            className="w-full py-3.5 rounded-xl bg-gold-dim text-burgundy-deep font-bold text-sm shadow-lg shadow-gold-dim/20 hover:opacity-90 transition disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {submitting ? (
               <div className="w-5 h-5 rounded-full border-2 border-white border-t-transparent animate-spin" />
@@ -1034,7 +1019,7 @@ export default function MintWinePage() {
 
           {/* Generate assets hint if not yet generated */}
           {!imageUrl && !generating && (
-            <p className="text-xs text-center text-amber-600 -mt-2">
+            <p className="text-xs text-center text-gold-dim/60 -mt-2">
               Tip: Scroll up to generate AI image{tokenMode === 'video' ? ' & video' : ''} before minting
             </p>
           )}
