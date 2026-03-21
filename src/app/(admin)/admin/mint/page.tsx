@@ -33,17 +33,29 @@ export default function MintWinePage() {
 
   // Token mode: wine or video
   const [tokenMode, setTokenMode] = useState<'wine' | 'video'>('wine');
+
+  // AI-generated assets
   const [videoUrl, setVideoUrl] = useState('');
   const videoUrlRef = useRef('');
-  const [videoGenerating, setVideoGenerating] = useState(false);
-  const [videoProgress, setVideoProgress] = useState('');
   const [videoPrompt, setVideoPrompt] = useState('');
+  const [imageUrl, setImageUrl] = useState('');
+  const imageUrlRef = useRef('');
+  const [imagePrompt, setImagePrompt] = useState('');
+
+  // Generation phase (before minting)
+  const [generating, setGenerating] = useState(false);
+  const [genPhase, setGenPhase] = useState<'idle' | 'image' | 'video' | 'done'>('idle');
+
   const videoInputRef = useRef<HTMLInputElement>(null);
 
-  // Keep ref in sync with state
+  // Keep refs in sync with state
   const setVideoUrlAndRef = (url: string) => {
     videoUrlRef.current = url;
     setVideoUrl(url);
+  };
+  const setImageUrlAndRef = (url: string) => {
+    imageUrlRef.current = url;
+    setImageUrl(url);
   };
 
   const [form, setForm] = useState({
@@ -55,56 +67,118 @@ export default function MintWinePage() {
     nose: "", palate: "", finish: "",
   });
 
+  const getMetadataPayload = () => ({
+    name: form.name, producer: form.producer, region: form.region,
+    country: form.country, vintage: form.vintage, varietal: form.varietal,
+    type: form.type, description: form.description,
+    nose: form.nose, palate: form.palate, finish: form.finish,
+    abv: form.abv, volume: form.volume,
+  });
+
+  const handleGenerateAssets = async () => {
+    if (!form.name) {
+      setMintError('Please fill in the wine name before generating assets.');
+      return;
+    }
+    setGenerating(true);
+    setMintError('');
+    const payload = getMetadataPayload();
+
+    // Step 1: Generate image
+    setGenPhase('image');
+    try {
+      const imgRes = await fetch('/api/generate-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const imgData = await imgRes.json();
+      if (!imgRes.ok) throw new Error(imgData.error || 'Image generation failed');
+      setImageUrlAndRef(imgData.imageUrl);
+      setImagePrompt(imgData.prompt);
+    } catch (err: any) {
+      setMintError(`AI Image: ${err.message}`);
+      setGenerating(false);
+      setGenPhase('idle');
+      return;
+    }
+
+    // Step 2: Generate video (only in video mode)
+    if (tokenMode === 'video') {
+      setGenPhase('video');
+      try {
+        const vidRes = await fetch('/api/generate-video', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const vidData = await vidRes.json();
+        if (!vidRes.ok) throw new Error(vidData.error || 'Video generation failed');
+        setVideoUrlAndRef(vidData.videoUrl);
+        setVideoPrompt(vidData.prompt);
+      } catch (err: any) {
+        setMintError(`AI Video: ${err.message}`);
+        setGenerating(false);
+        setGenPhase('idle');
+        return;
+      }
+    }
+
+    setGenPhase('done');
+    setGenerating(false);
+  };
+
+  const handleGenerateImage = async () => {
+    if (!form.name) {
+      setMintError('Please fill in the wine name before generating an image.');
+      return;
+    }
+    setGenerating(true);
+    setGenPhase('image');
+    setMintError('');
+    try {
+      const res = await fetch('/api/generate-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(getMetadataPayload()),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Image generation failed');
+      setImageUrlAndRef(data.imageUrl);
+      setImagePrompt(data.prompt);
+      setGenPhase('done');
+    } catch (err: any) {
+      setMintError(`AI Image: ${err.message}`);
+      setGenPhase('idle');
+    } finally {
+      setGenerating(false);
+    }
+  };
+
   const handleGenerateVideo = async () => {
-    // Validate at least name is filled
     if (!form.name) {
       setMintError('Please fill in the wine name before generating a video.');
       return;
     }
-    setVideoGenerating(true);
-    setVideoProgress('Building cinematic prompt from metadata...');
+    setGenerating(true);
+    setGenPhase('video');
     setMintError('');
-    setVideoUrlAndRef('');
-    setVideoPrompt('');
-
     try {
-      await new Promise(r => setTimeout(r, 600));
-      setVideoProgress('Sending to AI video model...');
-
       const res = await fetch('/api/generate-video', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: form.name,
-          producer: form.producer,
-          region: form.region,
-          country: form.country,
-          vintage: form.vintage,
-          varietal: form.varietal,
-          type: form.type,
-          description: form.description,
-          nose: form.nose,
-          palate: form.palate,
-          finish: form.finish,
-          abv: form.abv,
-          volume: form.volume,
-        }),
+        body: JSON.stringify(getMetadataPayload()),
       });
-
-      setVideoProgress('Rendering video frames...');
       const data = await res.json();
-
       if (!res.ok) throw new Error(data.error || 'Video generation failed');
-
       setVideoUrlAndRef(data.videoUrl);
       setVideoPrompt(data.prompt);
-      setVideoProgress('');
+      setGenPhase('done');
     } catch (err: any) {
-      setMintError(`AI Video generation failed: ${err.message}`);
-      setVideoUrlAndRef('');
-      setVideoProgress('');
+      setMintError(`AI Video: ${err.message}`);
+      setGenPhase('idle');
     } finally {
-      setVideoGenerating(false);
+      setGenerating(false);
     }
   };
 
@@ -176,9 +250,6 @@ export default function MintWinePage() {
     // Initialize cinematic mint steps
     const steps: MintStep[] = [
       { id: 'prepare', label: 'Preparing Token Data', description: 'Structuring wine metadata for on-chain storage', icon: 'data_object', status: 'pending' },
-      ...(tokenMode === 'video' && !videoUrl ? [
-        { id: 'aivideo', label: 'Generating AI Video', description: 'Creating cinematic video from wine metadata', icon: 'movie_creation', status: 'pending' as const },
-      ] : []),
       { id: 'auth', label: 'Authenticating with DUAL', description: 'Verifying org-scoped JWT credentials', icon: 'shield', status: 'pending' },
       { id: 'mint', label: 'Minting ERC-721 Token', description: 'Writing to DUAL Network via /ebus/execute', icon: 'token', status: 'pending' },
       { id: 'anchor', label: 'Anchoring Content Hash', description: 'Computing integrity hash and anchoring on-chain', icon: 'link', status: 'pending' },
@@ -194,38 +265,6 @@ export default function MintWinePage() {
     await sleep(800);
     steps.find(s => s.id === 'prepare')!.status = 'done';
     setMintSteps([...steps]);
-
-    // Auto-generate AI video during mint if video mode and none generated yet
-    if (tokenMode === 'video' && !videoUrl) {
-      const aiStep = steps.find(s => s.id === 'aivideo')!;
-      await sleep(300);
-      aiStep.status = 'active';
-      setMintSteps([...steps]);
-
-      try {
-        const vidRes = await fetch('/api/generate-video', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            name: form.name, producer: form.producer, region: form.region,
-            country: form.country, vintage: form.vintage, varietal: form.varietal,
-            type: form.type, description: form.description,
-            nose: form.nose, palate: form.palate, finish: form.finish,
-          }),
-        });
-        const vidData = await vidRes.json();
-        if (!vidRes.ok) throw new Error(vidData.error || 'AI video generation failed');
-        setVideoUrlAndRef(vidData.videoUrl);
-        aiStep.status = 'done';
-        setMintSteps([...steps]);
-      } catch (vidErr: any) {
-        aiStep.status = 'error';
-        setMintSteps([...steps]);
-        setMintError(`AI Video: ${vidErr.message}`);
-        setSubmitting(false);
-        return;
-      }
-    }
 
     // Step 2: Authenticating
     await sleep(300);
@@ -253,7 +292,10 @@ export default function MintWinePage() {
           tastingNotes: { nose: form.nose, palate: form.palate, finish: form.finish },
         },
       };
-      // Include videoUrl if this is a video token (use ref for latest value)
+      // Include AI-generated assets (use refs for latest values)
+      if (imageUrlRef.current) {
+        mintPayload.data.imageUrl = imageUrlRef.current;
+      }
       if (tokenMode === 'video' && videoUrlRef.current) {
         mintPayload.data.videoUrl = videoUrlRef.current;
       }
@@ -746,90 +788,151 @@ export default function MintWinePage() {
         )}
 
         <form onSubmit={handleSubmit} className="max-w-4xl space-y-6">
-          {/* AI Video Generation (only in video mode) */}
-          {tokenMode === 'video' && (
-            <div className="bg-surface rounded-xl shadow-sm border border-amber-200 p-6">
-              <h3 className="text-sm font-bold text-slate-900 mb-1 flex items-center gap-2">
-                <span className="material-symbols-outlined text-amber-600 text-lg">auto_awesome</span>
-                AI Video Generation
-              </h3>
-              <p className="text-xs text-slate-400 mb-4">
-                Fill in the wine metadata below, then generate a cinematic AI video from it
-              </p>
+          {/* AI Asset Generation — always shown */}
+          <div className="bg-surface rounded-xl shadow-sm border border-amber-200 p-6">
+            <h3 className="text-sm font-bold text-slate-900 mb-1 flex items-center gap-2">
+              <span className="material-symbols-outlined text-amber-600 text-lg">auto_awesome</span>
+              AI-Generated Assets
+              <span className="text-[10px] font-normal text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">Nano Banana</span>
+            </h3>
+            <p className="text-xs text-slate-400 mb-4">
+              Fill in the wine metadata below, then generate {tokenMode === 'video' ? 'a product image and cinematic video' : 'a product image'} from it
+            </p>
 
-              {!videoUrl && !videoGenerating && (
-                <button
-                  type="button"
-                  onClick={handleGenerateVideo}
-                  className="w-full border-2 border-dashed border-amber-300 rounded-xl py-10 flex flex-col items-center gap-3 hover:border-amber-500 hover:bg-amber-50/50 transition group"
-                >
-                  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-amber-500 to-amber-700 flex items-center justify-center shadow-lg shadow-amber-500/20 group-hover:scale-105 transition">
-                    <span className="material-symbols-outlined text-2xl text-white">auto_awesome</span>
-                  </div>
-                  <span className="text-sm font-semibold text-amber-700">Generate AI Video from Metadata</span>
-                  <span className="text-xs text-slate-400">Uses wine name, region, vintage, tasting notes &amp; more to create a cinematic clip</span>
-                </button>
-              )}
-
-              {videoGenerating && (
-                <div className="w-full rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 py-10 flex flex-col items-center gap-4">
-                  <div className="relative w-16 h-16">
-                    <div className="absolute inset-0 rounded-full border-2 border-amber-500/20" />
-                    <div className="absolute inset-0 rounded-full border-2 border-t-amber-600 border-r-transparent border-b-transparent border-l-transparent animate-spin" style={{ animationDuration: '1.5s' }} />
-                    <div className="absolute inset-2 rounded-full border-2 border-t-transparent border-r-orange-500 border-b-transparent border-l-transparent animate-spin" style={{ animationDuration: '1s', animationDirection: 'reverse' }} />
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="material-symbols-outlined text-amber-600 text-xl">movie_creation</span>
-                    </div>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-sm font-semibold text-amber-800">Generating Video...</p>
-                    <p className="text-xs text-amber-600 mt-1 animate-pulse">{videoProgress}</p>
-                  </div>
-                  <div className="w-48 h-1 rounded-full bg-amber-200 overflow-hidden">
-                    <div className="h-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-full animate-pulse" style={{ width: '60%' }} />
-                  </div>
-                  <p className="text-[10px] text-slate-400">This may take 30–120 seconds depending on the model</p>
+            {/* Generate All button */}
+            {!imageUrl && !generating && (
+              <button
+                type="button"
+                onClick={handleGenerateAssets}
+                className="w-full border-2 border-dashed border-amber-300 rounded-xl py-10 flex flex-col items-center gap-3 hover:border-amber-500 hover:bg-amber-50/50 transition group"
+              >
+                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-amber-500 to-amber-700 flex items-center justify-center shadow-lg shadow-amber-500/20 group-hover:scale-105 transition">
+                  <span className="material-symbols-outlined text-2xl text-white">auto_awesome</span>
                 </div>
-              )}
+                <span className="text-sm font-semibold text-amber-700">
+                  Generate {tokenMode === 'video' ? 'Image & Video' : 'Product Image'} from Metadata
+                </span>
+                <span className="text-xs text-slate-400">
+                  Uses wine name, region, vintage, tasting notes &amp; more
+                </span>
+              </button>
+            )}
 
-              {videoUrl && !videoGenerating && (
-                <div className="space-y-3">
-                  <div className="rounded-xl overflow-hidden bg-black">
-                    <video src={videoUrl} controls className="w-full max-h-64 mx-auto" />
+            {/* Generation progress */}
+            {generating && (
+              <div className="w-full rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 py-8 flex flex-col items-center gap-4">
+                <div className="relative w-16 h-16">
+                  <div className="absolute inset-0 rounded-full border-2 border-amber-500/20" />
+                  <div className="absolute inset-0 rounded-full border-2 border-t-amber-600 border-r-transparent border-b-transparent border-l-transparent animate-spin" style={{ animationDuration: '1.5s' }} />
+                  <div className="absolute inset-2 rounded-full border-2 border-t-transparent border-r-orange-500 border-b-transparent border-l-transparent animate-spin" style={{ animationDuration: '1s', animationDirection: 'reverse' }} />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="material-symbols-outlined text-amber-600 text-xl">
+                      {genPhase === 'image' ? 'image' : 'movie_creation'}
+                    </span>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="material-symbols-outlined text-green-600 text-lg">check_circle</span>
-                      <span className="text-sm font-medium text-green-700">AI Video Ready</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={handleGenerateVideo}
-                        className="text-sm text-amber-600 hover:text-amber-800 transition flex items-center gap-1"
-                      >
-                        <span className="material-symbols-outlined text-sm">refresh</span>
-                        Regenerate
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => { setVideoUrlAndRef(''); setVideoPrompt(''); }}
-                        className="text-sm text-red-500 hover:text-red-700 transition"
-                      >
-                        Remove
-                      </button>
-                    </div>
+                </div>
+                <div className="text-center">
+                  <p className="text-sm font-semibold text-amber-800">
+                    {genPhase === 'image' ? 'Generating Product Image...' : 'Generating Cinematic Video...'}
+                  </p>
+                  <p className="text-xs text-amber-600 mt-1">
+                    {genPhase === 'image' ? 'Nano Banana is creating your wine label artwork' : 'Nano Banana Video is rendering your clip'}
+                  </p>
+                </div>
+                {/* Progress indicators */}
+                <div className="flex items-center gap-3 mt-1">
+                  <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${
+                    genPhase === 'image' ? 'bg-amber-200 text-amber-800 animate-pulse' :
+                    imageUrl ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-400'
+                  }`}>
+                    <span className="material-symbols-outlined text-xs">{imageUrl ? 'check_circle' : 'image'}</span>
+                    Image
                   </div>
-                  {videoPrompt && (
-                    <details className="text-xs">
-                      <summary className="text-slate-400 cursor-pointer hover:text-slate-600 transition">View AI prompt used</summary>
-                      <p className="mt-2 p-3 rounded-lg bg-slate-50 border border-slate-200 text-slate-500 leading-relaxed">{videoPrompt}</p>
-                    </details>
+                  {tokenMode === 'video' && (
+                    <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${
+                      genPhase === 'video' ? 'bg-amber-200 text-amber-800 animate-pulse' :
+                      videoUrl ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-400'
+                    }`}>
+                      <span className="material-symbols-outlined text-xs">{videoUrl ? 'check_circle' : 'videocam'}</span>
+                      Video
+                    </div>
                   )}
                 </div>
-              )}
-            </div>
-          )}
+                <p className="text-[10px] text-slate-400">
+                  {genPhase === 'image' ? 'Usually takes 5–15 seconds' : 'May take 30–120 seconds'}
+                </p>
+              </div>
+            )}
+
+            {/* Generated assets preview */}
+            {(imageUrl || videoUrl) && !generating && (
+              <div className="space-y-4">
+                {/* Image preview */}
+                {imageUrl && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="material-symbols-outlined text-green-600 text-sm">check_circle</span>
+                        <span className="text-xs font-semibold text-slate-700">AI Product Image</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button type="button" onClick={handleGenerateImage}
+                          className="text-xs text-amber-600 hover:text-amber-800 transition flex items-center gap-1">
+                          <span className="material-symbols-outlined text-xs">refresh</span>
+                          Regenerate
+                        </button>
+                        <button type="button" onClick={() => { setImageUrlAndRef(''); setImagePrompt(''); }}
+                          className="text-xs text-red-500 hover:text-red-700 transition">
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                    <div className="rounded-xl overflow-hidden bg-slate-100 border border-slate-200">
+                      <img src={imageUrl} alt="AI generated wine" className="w-full max-h-72 object-contain mx-auto" />
+                    </div>
+                    {imagePrompt && (
+                      <details className="text-xs">
+                        <summary className="text-slate-400 cursor-pointer hover:text-slate-600 transition">View image prompt</summary>
+                        <p className="mt-2 p-3 rounded-lg bg-slate-50 border border-slate-200 text-slate-500 leading-relaxed">{imagePrompt}</p>
+                      </details>
+                    )}
+                  </div>
+                )}
+
+                {/* Video preview */}
+                {videoUrl && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="material-symbols-outlined text-green-600 text-sm">check_circle</span>
+                        <span className="text-xs font-semibold text-slate-700">AI Cinematic Video</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button type="button" onClick={handleGenerateVideo}
+                          className="text-xs text-amber-600 hover:text-amber-800 transition flex items-center gap-1">
+                          <span className="material-symbols-outlined text-xs">refresh</span>
+                          Regenerate
+                        </button>
+                        <button type="button" onClick={() => { setVideoUrlAndRef(''); setVideoPrompt(''); }}
+                          className="text-xs text-red-500 hover:text-red-700 transition">
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                    <div className="rounded-xl overflow-hidden bg-black">
+                      <video src={videoUrl} controls className="w-full max-h-64 mx-auto" />
+                    </div>
+                    {videoPrompt && (
+                      <details className="text-xs">
+                        <summary className="text-slate-400 cursor-pointer hover:text-slate-600 transition">View video prompt</summary>
+                        <p className="mt-2 p-3 rounded-lg bg-slate-50 border border-slate-200 text-slate-500 leading-relaxed">{videoPrompt}</p>
+                      </details>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
 
           {/* Wine Information */}
           <div className="bg-surface rounded-xl shadow-sm border border-slate-200 p-6">
@@ -916,6 +1019,13 @@ export default function MintWinePage() {
             )}
             {submitting ? "Minting on DUAL..." : tokenMode === 'video' ? "Mint Video Token" : "Mint Wine Token"}
           </button>
+
+          {/* Generate assets hint if not yet generated */}
+          {!imageUrl && !generating && (
+            <p className="text-xs text-center text-amber-600 -mt-2">
+              Tip: Scroll up to generate AI image{tokenMode === 'video' ? ' & video' : ''} before minting
+            </p>
+          )}
         </form>
       </div>
     </div>

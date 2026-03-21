@@ -164,7 +164,7 @@ function mapGatewayToWine(obj: any): Wine {
       purchasePrice: c.purchasePrice ? parseFloat(c.purchasePrice) : 0,
       description: m.description || c.description || 'DUAL network token',
       tastingNotes: c.tastingNotes || { nose: '', palate: '', finish: '' },
-      imageUrl: m.image?.url || undefined,
+      imageUrl: m.image?.url || c.imageUrl || undefined,
       videoUrl: c.videoUrl || undefined,
     },
     provenance: [{
