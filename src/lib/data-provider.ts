@@ -295,7 +295,15 @@ class DualDataProvider implements DataProvider {
     const client = getDualClient();
     const result = await client.objects.listObjects({ limit: 100, template_id: process.env.DUAL_TEMPLATE_ID || undefined });
     const objects = result?.objects || result?.data || [];
-    const wines = (objects as any[]).map((obj: any) => mapGatewayToWine(obj));
+    // Filter out orphaned/empty tokens: must have custom.name and a real owner (not null address or padded wallet)
+    const validObjects = (objects as any[]).filter((obj: any) => {
+      const hasName = obj.custom && obj.custom.name;
+      const owner = obj.owner || '';
+      const isNullOwner = owner === '0x0000000000000000000000000000000000000000';
+      const isPaddedWallet = owner.startsWith('0x00000000000000');
+      return hasName && !isNullOwner && !isPaddedWallet;
+    });
+    const wines = validObjects.map((obj: any) => mapGatewayToWine(obj));
 
     // Resolve real Blockscout links by matching integrity_hash
     try {
