@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import type { Wine, Action } from "@/types/dual";
+import AuthModal, { checkAuth } from "@/components/AuthModal";
 
 const BLOCKSCOUT_BASE = 'https://32f.blockv.io';
 const DUAL_CONTRACT = '0x41Cf00E593c5623B00F812bC70Ee1A737C5aFF06';
@@ -67,6 +68,7 @@ export default function WineDetailPage() {
   const [transferAddress, setTransferAddress] = useState('');
   const [transferring, setTransferring] = useState(false);
   const [transferResult, setTransferResult] = useState<string | null>(null);
+  const [showAuth, setShowAuth] = useState(false);
 
   useEffect(() => {
     if (!params.id) return;
@@ -259,7 +261,14 @@ export default function WineDetailPage() {
               QR Code
             </Link>
             <button
-              onClick={() => setShowTransfer(true)}
+              onClick={async () => {
+                const isAuthed = await checkAuth();
+                if (!isAuthed) {
+                  setShowAuth(true);
+                } else {
+                  setShowTransfer(true);
+                }
+              }}
               className="flex-1 min-w-[120px] py-3 rounded-xl bg-gradient-to-r from-[#791b3a] to-[#4d0d22] text-white font-semibold text-xs transition flex items-center justify-center gap-1.5 hover:shadow-lg hover:shadow-[#791b3a]/20"
             >
               <span className="material-symbols-outlined text-base">swap_horiz</span>
@@ -561,6 +570,16 @@ export default function WineDetailPage() {
           animation: slide-up 0.3s ease-out;
         }
       `}</style>
+
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={showAuth}
+        onClose={() => setShowAuth(false)}
+        onAuthenticated={() => {
+          setShowAuth(false);
+          setShowTransfer(true);
+        }}
+      />
     </div>
   );
 }

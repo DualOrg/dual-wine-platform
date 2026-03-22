@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import type { Wine } from '@/types/dual';
+import AuthModal, { checkAuth } from '@/components/AuthModal';
 
 interface ListedWine extends Wine {
   listedPrice?: number;
@@ -87,6 +88,8 @@ export default function MarketplacePage() {
     transactionHash: null,
   });
   const [processingStep, setProcessingStep] = useState<number>(0);
+  const [showAuth, setShowAuth] = useState(false);
+  const [pendingBuyWine, setPendingBuyWine] = useState<ListedWine | null>(null);
 
   useEffect(() => {
     const fetchWines = async () => {
@@ -130,7 +133,13 @@ export default function MarketplacePage() {
   const totalVolume = wines.reduce((sum, w) => sum + (w.listedPrice || 0), 0);
   const avgPrice = totalListings > 0 ? totalVolume / totalListings : 0;
 
-  const handleBuyClick = (wine: ListedWine) => {
+  const handleBuyClick = async (wine: ListedWine) => {
+    const isAuthed = await checkAuth();
+    if (!isAuthed) {
+      setPendingBuyWine(wine);
+      setShowAuth(true);
+      return;
+    }
     setPurchaseModal({
       wine,
       isOpen: true,
@@ -139,6 +148,21 @@ export default function MarketplacePage() {
       step: 'confirm',
       transactionHash: null,
     });
+  };
+
+  const handleAuthComplete = () => {
+    setShowAuth(false);
+    if (pendingBuyWine) {
+      setPurchaseModal({
+        wine: pendingBuyWine,
+        isOpen: true,
+        loading: false,
+        error: null,
+        step: 'confirm',
+        transactionHash: null,
+      });
+      setPendingBuyWine(null);
+    }
   };
 
   const handleConfirmPurchase = async () => {
@@ -634,6 +658,13 @@ export default function MarketplacePage() {
           </div>
         )}
       </div>
+
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={showAuth}
+        onClose={() => { setShowAuth(false); setPendingBuyWine(null); }}
+        onAuthenticated={handleAuthComplete}
+      />
 
       {/* Inline styles for animations */}
       <style>{animationStyles}</style>
