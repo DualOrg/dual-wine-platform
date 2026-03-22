@@ -37,11 +37,12 @@ export async function POST(req: NextRequest) {
     // The form sends flat wine fields — we re-map them here.
     const mintData: Record<string, any> = {};
 
-    // metadata overrides (name, description shown on the token)
-    if (rawData.name || rawData.description) {
+    // metadata overrides (name, description, image shown on the token & Blockscout)
+    if (rawData.name || rawData.description || rawData.imageUrl) {
       mintData.metadata = {
         ...(rawData.name ? { name: rawData.name } : {}),
         ...(rawData.description ? { description: rawData.description } : {}),
+        ...(rawData.imageUrl ? { image: { url: rawData.imageUrl, name: rawData.name || 'token-image', type: 'image/png' } } : {}),
       };
     }
 
