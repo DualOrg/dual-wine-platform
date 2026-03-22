@@ -97,11 +97,10 @@ export default function MarketplacePage() {
         // Filter to listed wines and add mock data
         const listedWines: ListedWine[] = allWines
           .filter((w: any) => w.status === 'anchored' || w.status === 'listed')
-          .slice(0, 8)
           .map((w: any, idx: number) => ({
             ...w,
-            listedPrice: Math.random() * 2000 + 1500,
-            originalPrice: w.wineData.currentValue,
+            listedPrice: w.wineData.currentValue || 0,
+            originalPrice: w.wineData.purchasePrice || w.wineData.currentValue,
             priceHistory: generatePriceHistory(),
           }));
 
@@ -190,11 +189,10 @@ export default function MarketplacePage() {
         const updatedWines = await updatedRes.json();
         const newWines: ListedWine[] = updatedWines
           .filter((w: any) => w.status === 'anchored' || w.status === 'listed')
-          .slice(0, 8)
           .map((w: any) => ({
             ...w,
-            listedPrice: Math.random() * 2000 + 1500,
-            originalPrice: w.wineData.currentValue,
+            listedPrice: w.wineData.currentValue || 0,
+            originalPrice: w.wineData.purchasePrice || w.wineData.currentValue,
             priceHistory: generatePriceHistory(),
           }));
         setWines(newWines);
@@ -435,7 +433,11 @@ export default function MarketplacePage() {
                   {/* Wine Summary */}
                   <div className="bg-burgundy-deep/20 border border-gold-dim/10 rounded-xl p-4 space-y-3">
                     <div className="flex items-start gap-3">
-                      <span className="text-3xl">{wineTypeEmoji[purchaseModal.wine.wineData.type] || '🍷'}</span>
+                      {purchaseModal.wine.wineData.imageUrl && !purchaseModal.wine.wineData.imageUrl.endsWith('.svg') ? (
+                        <img src={purchaseModal.wine.wineData.imageUrl} alt={purchaseModal.wine.wineData.name} className="w-12 h-12 rounded-lg object-cover flex-shrink-0" />
+                      ) : (
+                        <span className="text-3xl">{wineTypeEmoji[purchaseModal.wine.wineData.type] || '🍷'}</span>
+                      )}
                       <div className="flex-1">
                         <h3 className="text-lg font-serif italic text-white">{purchaseModal.wine.wineData.name}</h3>
                         <p className="text-sm text-white/35">{purchaseModal.wine.wineData.producer}</p>
@@ -466,7 +468,7 @@ export default function MarketplacePage() {
                       disabled={purchaseModal.loading}
                       className="w-full py-3 bg-gradient-to-r from-gold-dim to-[#b8860b] text-white font-bold rounded-lg active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
-                      <span className="material-symbols-outlined text-base">blockchain</span>
+                      <span className="material-symbols-outlined text-base">link</span>
                       Execute On-Chain
                     </button>
 
@@ -537,7 +539,11 @@ export default function MarketplacePage() {
                   {/* Wine Summary */}
                   <div className="bg-burgundy-deep/20 border border-gold-dim/10 rounded-xl p-4 space-y-3">
                     <div className="flex items-start gap-3">
-                      <span className="text-3xl">{wineTypeEmoji[purchaseModal.wine.wineData.type] || '🍷'}</span>
+                      {purchaseModal.wine.wineData.imageUrl && !purchaseModal.wine.wineData.imageUrl.endsWith('.svg') ? (
+                        <img src={purchaseModal.wine.wineData.imageUrl} alt={purchaseModal.wine.wineData.name} className="w-12 h-12 rounded-lg object-cover flex-shrink-0" />
+                      ) : (
+                        <span className="text-3xl">{wineTypeEmoji[purchaseModal.wine.wineData.type] || '🍷'}</span>
+                      )}
                       <div className="flex-1">
                         <h3 className="text-lg font-serif italic text-white">{purchaseModal.wine.wineData.name}</h3>
                         <p className="text-sm text-gold-dim font-semibold">
