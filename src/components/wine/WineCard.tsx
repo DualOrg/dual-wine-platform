@@ -32,8 +32,13 @@ export default function WineCard({ wine }: { wine: Wine }) {
   return (
     <Link href={`/wallet/browse/${wine.id}`} className="block group">
       <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden hover:shadow-lg hover:border-primary-consumer/20 transition-all duration-200">
-        <div className="h-48 wine-gradient flex items-center justify-center relative">
-          <span className="material-symbols-outlined text-white/20 text-6xl">wine_bar</span>
+        <div className="h-48 wine-gradient flex items-center justify-center relative overflow-hidden">
+          {wine.wineData.imageUrl && !wine.wineData.imageUrl.endsWith('.svg') ? (
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img src={wine.wineData.imageUrl} alt={wine.wineData.name} className="absolute inset-0 w-full h-full object-cover" />
+          ) : (
+            <span className="material-symbols-outlined text-white/20 text-6xl">wine_bar</span>
+          )}
           <div className="absolute top-3 left-3 flex gap-2">
             <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${typeColors[wine.wineData.type] ?? "bg-slate-100 text-slate-600"}`}>
               {wine.wineData.type}

@@ -111,6 +111,7 @@ export default function WineDetailPage() {
   const d = wine.wineData;
   const gradient = typeGradients[d.type] || typeGradients.red;
   const isVideo = !!d.videoUrl;
+  const hasImage = !!d.imageUrl && !d.imageUrl.endsWith('.svg');
 
   // Build a proper display name from wine data when the stored name is a generic template default
   const genericNames = ['Wine Provenance Token', 'Token', 'Untitled'];
@@ -137,6 +138,16 @@ export default function WineDetailPage() {
               className="absolute inset-0 w-full h-full object-cover"
             />
             <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(15,15,15,0.2) 0%, rgba(15,15,15,0.7) 100%)' }} />
+          </>
+        ) : hasImage ? (
+          <>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={d.imageUrl}
+              alt={d.name}
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+            <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(15,15,15,0.1) 0%, rgba(15,15,15,0.75) 100%)' }} />
           </>
         ) : (
           <div className="absolute inset-0 opacity-[0.05]" style={{
@@ -167,8 +178,10 @@ export default function WineDetailPage() {
           )}
         </div>
 
-        {/* Wine Icon */}
-        <span className="material-symbols-outlined text-white/[0.06] text-[160px]">wine_bar</span>
+        {/* Wine Icon (only when no image/video) */}
+        {!isVideo && !hasImage && (
+          <span className="material-symbols-outlined text-white/[0.06] text-[160px]">wine_bar</span>
+        )}
       </div>
 
       {/* Content Card */}

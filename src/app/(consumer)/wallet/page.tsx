@@ -161,9 +161,14 @@ export default function CellarPage() {
 
                 <div className="relative p-5">
                   <div className="flex items-start gap-4">
-                    {/* Wine icon */}
-                    <div className="w-14 h-18 rounded-xl bg-gradient-to-b from-[#2D0A15] to-[#1a0510] flex items-center justify-center flex-shrink-0 border border-white/[0.06]">
-                      <span className="material-symbols-outlined text-[#791b3a]/60 text-2xl">wine_bar</span>
+                    {/* Wine thumbnail */}
+                    <div className="w-14 h-18 rounded-xl bg-gradient-to-b from-[#2D0A15] to-[#1a0510] flex items-center justify-center flex-shrink-0 border border-white/[0.06] overflow-hidden">
+                      {d.imageUrl && !d.imageUrl.endsWith('.svg') ? (
+                        /* eslint-disable-next-line @next/next/no-img-element */
+                        <img src={d.imageUrl} alt={d.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="material-symbols-outlined text-[#791b3a]/60 text-2xl">wine_bar</span>
+                      )}
                     </div>
                     {/* Info */}
                     <div className="flex-1 min-w-0">
