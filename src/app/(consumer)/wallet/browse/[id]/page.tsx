@@ -137,8 +137,8 @@ export default function WineDetailPage() {
               loop
               muted
               playsInline
-              onCanPlay={(e) => { (e.target as HTMLVideoElement).style.opacity = '1'; }}
-              className="absolute inset-0 w-full h-full object-cover transition-opacity duration-1000"
+              onPlaying={(e) => { (e.target as HTMLVideoElement).style.opacity = '1'; }}
+              className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700"
               style={{ opacity: 0 }}
             />
             <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(15,15,15,0.2) 0%, rgba(15,15,15,0.7) 100%)' }} />
