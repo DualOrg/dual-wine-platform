@@ -177,7 +177,6 @@ export default function MarketplacePage() {
 
         setPurchaseModal((p) => ({
           ...p,
-          wine: data.wine,
           step: 'success',
           loading: false,
           error: null,
