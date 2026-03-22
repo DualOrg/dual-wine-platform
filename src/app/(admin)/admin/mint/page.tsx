@@ -304,12 +304,19 @@ export default function MintWinePage() {
           tastingNotes: { nose: form.nose, palate: form.palate, finish: form.finish },
         },
       };
-      // Include AI-generated assets (use refs for latest values)
-      if (imageUrlRef.current) {
-        mintPayload.data.imageUrl = imageUrlRef.current;
+      // AI-generated assets: if a data URL (base64) is present, strip it from the
+      // mint payload to avoid Vercel's 4.5 MB body limit.  Instead, keep only short
+      // hosted-path URLs (e.g. "/wines/slug.png").  After the mint succeeds we PATCH
+      // the object's custom fields with the asset references.
+      const isDataUrl = (u: string) => u.startsWith('data:');
+      const pendingImageUrl = imageUrlRef.current || '';
+      const pendingVideoUrl = (tokenMode === 'video' && videoUrlRef.current) ? videoUrlRef.current : '';
+
+      if (pendingImageUrl && !isDataUrl(pendingImageUrl)) {
+        mintPayload.data.imageUrl = pendingImageUrl;
       }
-      if (tokenMode === 'video' && videoUrlRef.current) {
-        mintPayload.data.videoUrl = videoUrlRef.current;
+      if (pendingVideoUrl && !isDataUrl(pendingVideoUrl)) {
+        mintPayload.data.videoUrl = pendingVideoUrl;
       }
 
       const res = await fetch("/api/mint", {
@@ -338,6 +345,25 @@ export default function MintWinePage() {
 
       // Fetch the freshly minted object to get real hashes
       const objectId = data.objectIds?.[0];
+
+      // Post-mint: if we had data-URL assets, update the object with them via
+      // a separate PATCH (which goes directly to the gateway and bypasses
+      // Vercel's body-size limit for the initial mint).
+      if (objectId && (isDataUrl(pendingImageUrl) || isDataUrl(pendingVideoUrl))) {
+        try {
+          const patchCustom: Record<string, string> = {};
+          if (isDataUrl(pendingImageUrl)) patchCustom.imageUrl = pendingImageUrl;
+          if (isDataUrl(pendingVideoUrl)) patchCustom.videoUrl = pendingVideoUrl;
+          await fetch(`/api/objects/${objectId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ custom: patchCustom }),
+          });
+        } catch {
+          // Non-fatal — token is minted, assets can be attached later
+          console.warn('Post-mint asset PATCH failed (non-fatal)');
+        }
+      }
       let contentHash = '';
       let integrityHash = '';
       let ownerWallet = '';
