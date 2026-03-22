@@ -321,12 +321,12 @@ export default function WineDetailPage() {
                       </div>
                     </div>
                     <div className="mb-4">
-                      <label className="block text-[9px] font-bold text-white/25 uppercase tracking-[0.2em] mb-1.5">Recipient Wallet Address</label>
+                      <label className="block text-[9px] font-bold text-white/25 uppercase tracking-[0.2em] mb-1.5">Recipient Wallet ID</label>
                       <input
                         type="text"
                         value={transferAddress}
                         onChange={e => setTransferAddress(e.target.value)}
-                        placeholder="0x..."
+                        placeholder="Enter DUAL wallet ID..."
                         className="w-full px-4 py-2.5 rounded-xl bg-white/[0.03] border border-white/[0.08] text-sm font-mono text-white placeholder:text-white/15 focus:outline-none focus:border-[#C5A059]/30"
                       />
                     </div>
