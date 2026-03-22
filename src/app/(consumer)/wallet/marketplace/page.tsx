@@ -323,8 +323,16 @@ export default function MarketplacePage() {
                 className="bg-burgundy-deep/20 border border-gold-dim/15 rounded-2xl overflow-hidden hover:border-gold-dim/30 transition group"
               >
                 {/* Image/Gradient */}
-                <div className="aspect-square bg-gradient-to-br from-burgundy-deep to-[#2d060f] flex items-center justify-center">
-                  <span className="text-6xl">{wineTypeEmoji[wine.wineData.type] || '🍷'}</span>
+                <div className="aspect-square bg-gradient-to-br from-burgundy-deep to-[#2d060f] flex items-center justify-center relative overflow-hidden">
+                  {wine.wineData.imageUrl && !wine.wineData.imageUrl.endsWith('.svg') ? (
+                    <img
+                      src={wine.wineData.imageUrl}
+                      alt={wine.wineData.name}
+                      className="absolute inset-0 w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-6xl">{wineTypeEmoji[wine.wineData.type] || '🍷'}</span>
+                  )}
                 </div>
 
                 {/* Content */}
