@@ -106,7 +106,7 @@ export default function LandingPage() {
               </h1>
 
               <p className="text-lg md:text-xl font-light text-white/70 max-w-2xl leading-relaxed">
-                Mint, verify, transfer, and trade wine tokens with full provenance — powered by <DualInline /> Protocol on the <DualInline /> Network.
+                Mint, verify, transfer, and trade wine tokens with full provenance.
               </p>
 
               {/* Stats bar + CTA */}
