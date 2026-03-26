@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import type { Wine } from "@/types/dual";
+import { DualLogo } from '@/components/logo/DualLogo';
 
 function truncateHash(hash: string, length: number = 8): string {
   if (!hash) return '';
@@ -97,8 +98,8 @@ export default function MarketplacePage() {
       <nav className="fixed top-0 left-0 w-full z-50" style={{ backdropFilter: 'blur(12px)', background: 'rgba(15,15,15,0.6)' }}>
         <div className="max-w-[1400px] mx-auto px-6 md:px-8 h-16 md:h-20 flex items-center justify-between border-b border-white/5">
           <div className="flex items-center gap-2">
-            <div className="w-5 h-5 rounded bg-gradient-to-br from-[#791b3a] to-[#d4af37]" />
-            <span className="font-serif italic text-lg md:text-xl tracking-wide">DUAL Vault</span>
+            <DualLogo height={18} className="text-white" />
+            <span className="font-serif italic text-lg md:text-xl tracking-wide">Vault</span>
           </div>
 
           <div className="hidden md:flex items-center gap-10 text-[10px] uppercase tracking-[0.2em] font-medium text-white/50">
