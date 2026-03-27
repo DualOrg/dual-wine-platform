@@ -304,18 +304,42 @@ export default function MintWinePage() {
           tastingNotes: { nose: form.nose, palate: form.palate, finish: form.finish },
         },
       };
-      // AI-generated assets: if a data URL (base64) is present, strip it from the
-      // mint payload to avoid Vercel's 4.5 MB body limit.  Instead, keep only short
-      // hosted-path URLs (e.g. "/wines/slug.png").  After the mint succeeds we PATCH
-      // the object's custom fields with the asset references.
+      // AI-generated assets: upload data URLs to Vercel Blob first to get
+      // a hosted URL, then include that in the mint payload.  Falls back to
+      // embedding the data URL directly if blob upload isn't available.
       const isDataUrl = (u: string) => u.startsWith('data:');
-      const pendingImageUrl = imageUrlRef.current || '';
-      const pendingVideoUrl = (tokenMode === 'video' && videoUrlRef.current) ? videoUrlRef.current : '';
+      let pendingImageUrl = imageUrlRef.current || '';
+      let pendingVideoUrl = (tokenMode === 'video' && videoUrlRef.current) ? videoUrlRef.current : '';
 
-      if (pendingImageUrl && !isDataUrl(pendingImageUrl)) {
+      // Upload data-URL image to Vercel Blob to get a hosted URL
+      if (pendingImageUrl && isDataUrl(pendingImageUrl)) {
+        try {
+          const uploadRes = await fetch('/api/upload-image', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              base64: imageBase64Ref.current || pendingImageUrl,
+              mimeType: imageMimeTypeRef.current || 'image/png',
+            }),
+          });
+          const uploadData = await uploadRes.json();
+          if (uploadRes.ok && uploadData.url) {
+            pendingImageUrl = uploadData.url;
+            console.log('Image uploaded to blob:', uploadData.url);
+          } else {
+            console.warn('Blob upload failed, including data URL directly:', uploadData.error);
+            // Fall through — we'll include the data URL directly in the mint payload
+          }
+        } catch (uploadErr) {
+          console.warn('Blob upload error, including data URL directly:', uploadErr);
+        }
+      }
+
+      // Always include image and video URLs in the mint payload
+      if (pendingImageUrl) {
         mintPayload.data.imageUrl = pendingImageUrl;
       }
-      if (pendingVideoUrl && !isDataUrl(pendingVideoUrl)) {
+      if (pendingVideoUrl) {
         mintPayload.data.videoUrl = pendingVideoUrl;
       }
 
@@ -346,22 +370,40 @@ export default function MintWinePage() {
       // Fetch the freshly minted object to get real hashes
       const objectId = data.objectIds?.[0];
 
-      // Post-mint: if we had data-URL assets, update the object with them via
-      // a separate PATCH (which goes directly to the gateway and bypasses
-      // Vercel's body-size limit for the initial mint).
-      if (objectId && (isDataUrl(pendingImageUrl) || isDataUrl(pendingVideoUrl))) {
+      // Post-mint: ensure the image/video URL is saved on the object.
+      // Update both metadata.image (for display) and custom fields (for data-provider).
+      if (objectId && (pendingImageUrl || pendingVideoUrl)) {
         try {
+          const patchBody: Record<string, any> = {};
           const patchCustom: Record<string, string> = {};
-          if (isDataUrl(pendingImageUrl)) patchCustom.imageUrl = pendingImageUrl;
-          if (isDataUrl(pendingVideoUrl)) patchCustom.videoUrl = pendingVideoUrl;
-          await fetch(`/api/objects/${objectId}`, {
+
+          if (pendingImageUrl) {
+            patchCustom.imageUrl = pendingImageUrl;
+            // Also set metadata.image for gateway-level display
+            patchBody.metadata = {
+              image: { url: pendingImageUrl, name: form.name || 'wine-image', type: imageMimeTypeRef.current || 'image/png' },
+            };
+          }
+          if (pendingVideoUrl) {
+            patchCustom.videoUrl = pendingVideoUrl;
+          }
+
+          patchBody.custom = patchCustom;
+
+          const patchRes = await fetch(`/api/objects/${objectId}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ custom: patchCustom }),
+            body: JSON.stringify(patchBody),
           });
-        } catch {
-          // Non-fatal — token is minted, assets can be attached later
-          console.warn('Post-mint asset PATCH failed (non-fatal)');
+
+          if (!patchRes.ok) {
+            const patchErr = await patchRes.json().catch(() => ({}));
+            console.error('Post-mint PATCH failed:', patchRes.status, patchErr);
+          } else {
+            console.log('Post-mint PATCH succeeded — assets attached to object');
+          }
+        } catch (patchErr) {
+          console.error('Post-mint asset PATCH error:', patchErr);
         }
       }
       let contentHash = '';
