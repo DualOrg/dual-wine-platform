@@ -10,7 +10,7 @@ interface AuthModalProps {
 
 export default function AuthModal({ isOpen, onClose, onAuthenticated }: AuthModalProps) {
   const [step, setStep] = useState<'email' | 'otp' | 'loading'>('email');
-  const [email, setEmail] = useState('icbuswell@gmail.com');
+  const [email, setEmail] = useState('');
   const [otp, setOtp] = useState('');
   const [error, setError] = useState<string | null>(null);
 
