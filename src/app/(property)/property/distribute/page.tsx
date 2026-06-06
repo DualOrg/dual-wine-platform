@@ -563,7 +563,7 @@ export default function DistributePage() {
                       <td className="py-4 px-6 text-right text-white">{dist.holdersCount}</td>
                       <td className="py-4 px-6 text-white/60 font-mono text-xs">
                         <a
-                          href={`https://32f.blockv.io/tx/${dist.txHash}`}
+                          href={`https://blockscout.dual.network/tx/${dist.txHash}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="hover:text-[#c9a84c] transition-colors flex items-center gap-1 group"

@@ -6,7 +6,7 @@ import Link from "next/link";
 import type { Wine, Action } from "@/types/dual";
 import AuthModal, { checkAuth } from "@/components/AuthModal";
 
-const BLOCKSCOUT_BASE = 'https://32f.blockv.io';
+const BLOCKSCOUT_BASE = 'https://blockscout.dual.network';
 const DUAL_CONTRACT = '0x41Cf00E593c5623B00F812bC70Ee1A737C5aFF06';
 
 function truncateHash(hash: string, length: number = 16): string {

@@ -29,7 +29,7 @@ class HttpClient {
   private maxRetries: number;
   private backoffMs: number;
   constructor(config: DualConfig = {}) {
-    this.baseUrl = config.baseUrl || 'https://gateway-48587430648.europe-west6.run.app';
+    this.baseUrl = config.baseUrl || 'https://api.dual.network/';
     this.token = config.token;
     this.apiKey = config.apiKey;
     this.timeout = config.timeout || 30000;

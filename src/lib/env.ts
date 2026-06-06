@@ -32,7 +32,7 @@ export function getConfig(): AppConfig {
 
   return {
     dualConfigured,
-    dualApiUrl: process.env.NEXT_PUBLIC_DUAL_API_URL ?? "https://blockv-labs.io",
+    dualApiUrl: process.env.NEXT_PUBLIC_DUAL_API_URL ?? "https://api.dual.network/",
     dualApiToken: process.env.DUAL_API_TOKEN ?? "",
     dualOrgId: process.env.DUAL_ORG_ID ?? "",
     dualTemplateId: process.env.DUAL_TEMPLATE_ID ?? "",

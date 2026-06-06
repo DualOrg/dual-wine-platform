@@ -549,7 +549,7 @@ export default function PortfolioPage() {
               ))}
             </div>
             <a
-              href="https://32f.blockv.io"
+              href="https://blockscout.dual.network"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-center gap-2 mt-6 p-3 bg-[#c9a84c]/10 border border-[#c9a84c]/30 rounded-lg text-[#c9a84c] hover:bg-[#c9a84c]/20 transition-colors"

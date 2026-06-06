@@ -158,7 +158,7 @@ export default function TicketsPage() {
           isLive: true,
           blockchainTxHash: t.blockchainTxHash,
           explorerUrl: t.blockchainTxHash
-            ? `https://32f.blockv.io/token/0x41Cf00E593c5623B00F812bC70Ee1A737C5aFF06`
+            ? `https://blockscout.dual.network/token/0x41Cf00E593c5623B00F812bC70Ee1A737C5aFF06`
             : undefined,
         }))
         setLiveTickets(mapped)
@@ -316,7 +316,7 @@ export default function TicketsPage() {
               <span className="text-[#00f0ff] font-semibold">DUAL Network</span>
             </span>
             <a
-              href="https://32f.blockv.io/token/0x41Cf00E593c5623B00F812bC70Ee1A737C5aFF06"
+              href="https://blockscout.dual.network/token/0x41Cf00E593c5623B00F812bC70Ee1A737C5aFF06"
               target="_blank"
               rel="noopener noreferrer"
               className="ml-auto text-sm text-[#00f0ff] hover:text-white transition-colors flex items-center gap-1"

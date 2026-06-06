@@ -289,7 +289,7 @@ export default function MarketplacePage() {
                         <div className="flex items-center gap-1.5">
                           <span className="text-[8px] uppercase tracking-[0.15em] text-white/20">Tx Hash</span>
                           <a
-                            href={`https://32f.blockv.io/tx/${wine.blockchainTxHash}`}
+                            href={`https://blockscout.dual.network/tx/${wine.blockchainTxHash}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-[10px] font-mono text-[#C5A059]/60 hover:text-[#C5A059] transition"
@@ -422,7 +422,7 @@ export default function MarketplacePage() {
                 Scan &amp; Verify a Bottle
               </Link>
               <a
-                href="https://32f.blockv.io"
+                href="https://blockscout.dual.network"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="border border-white/10 hover:bg-white/5 transition-all py-4 px-10 text-[10px] uppercase tracking-[0.3em] font-bold text-white/50 text-center flex items-center justify-center gap-2"

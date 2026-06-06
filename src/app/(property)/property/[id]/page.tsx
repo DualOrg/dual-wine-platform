@@ -606,7 +606,7 @@ export default function PropertyDetailPage({
                       </div>
                     </div>
                     <a
-                      href="https://32f.blockv.io/token/0x41Cf00E593c5623B00F812bC70Ee1A737C5aFF06"
+                      href="https://blockscout.dual.network/token/0x41Cf00E593c5623B00F812bC70Ee1A737C5aFF06"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center justify-center gap-2 p-4 bg-[#c9a84c]/10 border border-[#c9a84c]/30 rounded-lg text-[#c9a84c] hover:bg-[#c9a84c]/20 transition-colors"

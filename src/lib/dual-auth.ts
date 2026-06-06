@@ -9,7 +9,7 @@
  */
 import { DualClient } from './dual-sdk';
 
-const BASE_URL = process.env.NEXT_PUBLIC_DUAL_API_URL || 'https://gateway-48587430648.europe-west6.run.app';
+const BASE_URL = process.env.NEXT_PUBLIC_DUAL_API_URL || 'https://api.dual.network/';
 const ORG_ID = process.env.DUAL_ORG_ID || '';
 const API_KEY = process.env.DUAL_API_KEY || '';
 

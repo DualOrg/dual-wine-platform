@@ -491,7 +491,7 @@ export default function ScannerPage() {
 
                 <div className="flex gap-4 justify-center">
                   <a
-                    href={`https://32f.blockv.io/tx/${result.verificationHash}`}
+                    href={`https://blockscout.dual.network/tx/${result.verificationHash}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-[#39ff14]/20 border border-[#39ff14]/50 text-[#39ff14] font-semibold hover:bg-[#39ff14]/30 transition-all"

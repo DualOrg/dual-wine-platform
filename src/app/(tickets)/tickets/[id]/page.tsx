@@ -275,7 +275,7 @@ export default function EventDetailPage({
                     ...prev,
                     isLive: true,
                     blockchainTxHash: data.ticket.blockchainTxHash,
-                    explorerUrl: `https://32f.blockv.io/token/0x41Cf00E593c5623B00F812bC70Ee1A737C5aFF06`,
+                    explorerUrl: `https://blockscout.dual.network/token/0x41Cf00E593c5623B00F812bC70Ee1A737C5aFF06`,
                   }
                 : null
             )

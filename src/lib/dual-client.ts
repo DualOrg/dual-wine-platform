@@ -21,7 +21,7 @@ export function getDualClient(): DualClient {
     client = new DualClient({
       token: process.env.DUAL_API_TOKEN || undefined,
       apiKey: process.env.DUAL_API_KEY || undefined,
-      baseUrl: process.env.NEXT_PUBLIC_DUAL_API_URL || 'https://gateway-48587430648.europe-west6.run.app',
+      baseUrl: process.env.NEXT_PUBLIC_DUAL_API_URL || 'https://api.dual.network/',
       timeout: 30000,
       retry: { maxAttempts: 3, backoffMs: 1000 },
     });

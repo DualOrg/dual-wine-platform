@@ -668,7 +668,7 @@ export default function MarketplacePage() {
 
                 <div className="flex gap-4">
                   <a
-                    href={`https://32f.blockv.io/tx/${purchaseModal.transactionHash}`}
+                    href={`https://blockscout.dual.network/tx/${purchaseModal.transactionHash}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex-1 py-3 rounded-lg font-bold border border-[#39ff14]/50 text-[#39ff14] hover:border-[#39ff14] hover:bg-[#39ff14]/10 transition-all flex items-center justify-center gap-2"

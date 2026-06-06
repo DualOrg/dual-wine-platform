@@ -14,7 +14,7 @@ type VerifyResult = {
   verifiedAt: string;
 };
 
-const BLOCKSCOUT_BASE = 'https://32f.blockv.io';
+const BLOCKSCOUT_BASE = 'https://blockscout.dual.network';
 const DUAL_CONTRACT = '0x41Cf00E593c5623B00F812bC70Ee1A737C5aFF06';
 
 const wineTypeEmoji: Record<string, string> = {

@@ -5,7 +5,7 @@ import Link from "next/link";
 import type { Wine } from "@/types/dual";
 import { DualLogo, DualInline } from '@/components/logo/DualLogo';
 
-const BLOCKSCOUT_BASE = 'https://32f.blockv.io';
+const BLOCKSCOUT_BASE = 'https://blockscout.dual.network';
 const DUAL_CONTRACT = '0x41Cf00E593c5623B00F812bC70Ee1A737C5aFF06';
 
 function truncateHash(hash: string, len: number = 12) {
@@ -354,7 +354,7 @@ export default function LandingPage() {
                   <span className="text-[10px] uppercase tracking-[0.3em] text-[#C5A059] font-semibold block mb-3">Infrastructure</span>
                   <h2 className="text-3xl md:text-4xl font-serif italic text-white mb-4">Built on real infrastructure</h2>
                   <p className="text-white/25 leading-relaxed mb-8 font-light">
-                    Every token is a real ERC-721 asset on the <DualInline /> Network, minted through the <DualInline /> Protocol gateway API. No simulations, no testnets — production smart contracts with Blockscout-verifiable transactions.
+                    The demo is now configured for <DualInline /> mainnet read-only operation. Production wine template and object mappings remain pending before hosted minting or live readback is claimed.
                   </p>
                   <div className="flex flex-wrap gap-2">
                     <a href={`${BLOCKSCOUT_BASE}/token/${DUAL_CONTRACT}`} target="_blank" rel="noopener noreferrer"

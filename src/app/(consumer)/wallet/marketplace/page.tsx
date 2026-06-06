@@ -586,7 +586,7 @@ export default function MarketplacePage() {
                     </div>
 
                     <a
-                      href={`https://32f.blockv.io/tx/${purchaseModal.transactionHash}`}
+                      href={`https://blockscout.dual.network/tx/${purchaseModal.transactionHash}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-sm text-gold-dim hover:text-[#C5A059] transition-colors flex items-center gap-2"

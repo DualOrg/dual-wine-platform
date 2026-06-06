@@ -567,7 +567,7 @@ export default function TradePage() {
                   <div className="flex justify-between">
                     <span className="text-white/50">Transaction:</span>
                     <a
-                      href="https://32f.blockv.io"
+                      href="https://blockscout.dual.network"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-[#c9a84c] hover:text-white transition-colors flex items-center gap-1"

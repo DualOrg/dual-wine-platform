@@ -45,7 +45,7 @@ export async function POST(req: NextRequest, { params }: { params: { ticketId: s
       purchasePrice: listingPrice,
       timestamp: new Date().toISOString(),
       transactionHash: `0x${Math.random().toString(16).slice(2)}`,
-      blockscoutUrl: `https://32f.blockv.io/tx/0x${Math.random().toString(16).slice(2)}`,
+      blockscoutUrl: `https://blockscout.dual.network/tx/0x${Math.random().toString(16).slice(2)}`,
     });
   } catch (err: any) {
     return NextResponse.json({ error: err.message || "Purchase failed" }, { status: err.status || 500 });
