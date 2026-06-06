@@ -15,8 +15,12 @@ function isTrue(value: string | undefined): boolean {
   return value === "true" || value === "1";
 }
 
-function hasValue(value: string | undefined): boolean {
+function hasValue(value: string | undefined): value is string {
   return !!value && value.trim().length > 0;
+}
+
+function uniqueValues(values: Array<string | undefined>): string[] {
+  return values.filter(hasValue).filter((value, index, list) => list.indexOf(value) === index);
 }
 
 export function getDualRuntimeStatus() {
@@ -29,10 +33,15 @@ export function getDualRuntimeStatus() {
   const writeMode = process.env.DUAL_WRITE_MODE || "read_only";
   const apiKeyConfigured = hasValue(process.env.DUAL_API_KEY);
   const apiTokenConfigured = hasValue(process.env.DUAL_API_TOKEN);
-  const templateIds = [process.env.DUAL_TEMPLATE_ID].filter(hasValue);
+  const templateIds = uniqueValues([
+    process.env.DUAL_TEMPLATE_ID,
+    content.liveDualMapping.templateId,
+  ]);
   const credentialConfigured = apiKeyConfigured || apiTokenConfigured;
   const publicWrites = isTrue(process.env.DEMO_PUBLIC_DUAL_WRITES);
   const writeAllowed = writeMode === "event_bus" && publicWrites && credentialConfigured && templateIds.length > 0;
+  const liveMappingReady = content.liveDualMapping.readbackVerified === true;
+  const hostedCredentialReadbackReady = credentialConfigured && templateIds.length > 0;
 
   return {
     app: "dual-wine-platform",
@@ -56,12 +65,13 @@ export function getDualRuntimeStatus() {
     writable: writeAllowed,
     read_allowed: targetNetwork === "mainnet" && apiUrl === MAINNET_API_URL,
     write_allowed: writeAllowed,
-    readbackReady: credentialConfigured && templateIds.length > 0,
-    mainnetMappingPending: !credentialConfigured || templateIds.length === 0,
+    readbackReady: liveMappingReady,
+    hostedCredentialReadbackReady,
+    mainnetMappingPending: !liveMappingReady,
     content,
     blockers: [
       ...(!credentialConfigured ? ["hosted_dual_credentials_not_configured"] : []),
-      ...(templateIds.length === 0 ? ["production_wine_template_mapping_pending"] : []),
+      ...(!liveMappingReady ? ["production_wine_template_mapping_pending"] : []),
       ...(writeMode === "read_only" ? ["write_mode_read_only"] : []),
       ...(!publicWrites ? ["public_writes_disabled"] : []),
     ],

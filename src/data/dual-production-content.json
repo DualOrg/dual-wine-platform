@@ -12,7 +12,18 @@
     "slug": "io.dual.examples.wine.production.v1",
     "name": "DUAL Wine Provenance Production v1",
     "description": "Production wine objects for the official DUAL Wine Provenance example.",
-    "actions": ["harvest", "barrel_age", "bottle", "ship", "sell", "verify"]
+    "actions": [
+      "harvest",
+      "barrel_age",
+      "bottle",
+      "ship",
+      "sell",
+      "verify"
+    ],
+    "id": "6a23ac5fe50cc49e61b04bfb",
+    "live": true,
+    "readbackVerified": true,
+    "mintedAt": "2026-06-06T05:13:14.222Z"
   },
   "objects": [
     {
@@ -20,7 +31,9 @@
       "metadata": {
         "name": "Penfold Ridge Barossa Shiraz 2021",
         "description": "Single-vineyard Barossa Shiraz with custody milestones from harvest to cellar.",
-        "image": { "url": "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=1200&q=80" }
+        "image": {
+          "url": "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=1200&q=80"
+        }
       },
       "custom": {
         "name": "Penfold Ridge Barossa Shiraz 2021",
@@ -35,9 +48,22 @@
         "quantity": 12,
         "condition": "pristine",
         "storage": "bonded_warehouse",
-        "drinkingWindow": { "from": 2028, "to": 2042 },
-        "ratings": [{ "critic": "Dual Cellar Panel", "score": 96, "year": 2026 }],
-        "certifications": ["producer certificate", "bonded custody", "temperature log"],
+        "drinkingWindow": {
+          "from": 2028,
+          "to": 2042
+        },
+        "ratings": [
+          {
+            "critic": "Dual Cellar Panel",
+            "score": 96,
+            "year": 2026
+          }
+        ],
+        "certifications": [
+          "producer certificate",
+          "bonded custody",
+          "temperature log"
+        ],
         "currentValue": 9600,
         "purchasePrice": 7200,
         "description": "A production-grade provenance object covering vineyard source, barrel ageing, bottling, custody, and buyer verification.",
@@ -49,6 +75,14 @@
         "imageUrl": "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=1200&q=80",
         "liveContentId": "dual-wine-barossa-shiraz-2021",
         "contentVersion": "2026-06-mainnet-content-v1"
+      },
+      "dual": {
+        "templateId": "6a23ac5fe50cc49e61b04bfb",
+        "objectId": "6a23ac60e50cc49e61b04bfd",
+        "stateHash": "0x54ed99e4c40b329179bf31f647c2cf9af0926be496d615b8675ccc9ca5e120d2",
+        "integrityHash": "0x0f43153c5e6accd90c8f774dd3c0f33e6becf2c744ffeb9465f37f585a2f5c90",
+        "readbackVerified": true,
+        "mintedAt": "2026-06-06T05:13:14.222Z"
       }
     },
     {
@@ -56,7 +90,9 @@
       "metadata": {
         "name": "Leeuwin Coast Chardonnay 2022",
         "description": "Margaret River Chardonnay with producer, cellar, distributor, and retail chain of custody.",
-        "image": { "url": "https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?w=1200&q=80" }
+        "image": {
+          "url": "https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?w=1200&q=80"
+        }
       },
       "custom": {
         "name": "Leeuwin Coast Chardonnay 2022",
@@ -71,9 +107,22 @@
         "quantity": 18,
         "condition": "excellent",
         "storage": "professional",
-        "drinkingWindow": { "from": 2026, "to": 2034 },
-        "ratings": [{ "critic": "Dual Cellar Panel", "score": 94, "year": 2026 }],
-        "certifications": ["producer certificate", "cold-chain custody", "retail scan"],
+        "drinkingWindow": {
+          "from": 2026,
+          "to": 2034
+        },
+        "ratings": [
+          {
+            "critic": "Dual Cellar Panel",
+            "score": 94,
+            "year": 2026
+          }
+        ],
+        "certifications": [
+          "producer certificate",
+          "cold-chain custody",
+          "retail scan"
+        ],
         "currentValue": 5400,
         "purchasePrice": 4320,
         "description": "A white-wine provenance object designed to demonstrate harvest, bottling, distribution, and consumer verification.",
@@ -85,6 +134,14 @@
         "imageUrl": "https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?w=1200&q=80",
         "liveContentId": "dual-wine-margaret-river-chardonnay-2022",
         "contentVersion": "2026-06-mainnet-content-v1"
+      },
+      "dual": {
+        "templateId": "6a23ac5fe50cc49e61b04bfb",
+        "objectId": "6a23ac62e50cc49e61b04c03",
+        "stateHash": "0xe38e50b29238f426f858ba1da234fcfe77428616d195c0cb35e8bc3fe798e511",
+        "integrityHash": "0xce00ec51154fca2662ebdcc6060e97361c5e67a218b22d0215d51c90dc552d5e",
+        "readbackVerified": true,
+        "mintedAt": "2026-06-06T05:13:14.222Z"
       }
     },
     {
@@ -92,7 +149,9 @@
       "metadata": {
         "name": "Derwent Crown Sparkling 2018",
         "description": "Tasmanian sparkling wine with disgorgement and storage proof.",
-        "image": { "url": "https://images.unsplash.com/photo-1547595628-c61a29f496f0?w=1200&q=80" }
+        "image": {
+          "url": "https://images.unsplash.com/photo-1547595628-c61a29f496f0?w=1200&q=80"
+        }
       },
       "custom": {
         "name": "Derwent Crown Sparkling 2018",
@@ -107,9 +166,22 @@
         "quantity": 24,
         "condition": "excellent",
         "storage": "professional",
-        "drinkingWindow": { "from": 2025, "to": 2032 },
-        "ratings": [{ "critic": "Dual Cellar Panel", "score": 95, "year": 2026 }],
-        "certifications": ["tirage record", "disgorgement proof", "cellar custody"],
+        "drinkingWindow": {
+          "from": 2025,
+          "to": 2032
+        },
+        "ratings": [
+          {
+            "critic": "Dual Cellar Panel",
+            "score": 95,
+            "year": 2026
+          }
+        ],
+        "certifications": [
+          "tirage record",
+          "disgorgement proof",
+          "cellar custody"
+        ],
         "currentValue": 7200,
         "purchasePrice": 6000,
         "description": "A sparkling-wine object showing how lifecycle stages can be enforced and verified from tirage to consumer scan.",
@@ -121,6 +193,14 @@
         "imageUrl": "https://images.unsplash.com/photo-1547595628-c61a29f496f0?w=1200&q=80",
         "liveContentId": "dual-wine-tasmania-sparkling-2018",
         "contentVersion": "2026-06-mainnet-content-v1"
+      },
+      "dual": {
+        "templateId": "6a23ac5fe50cc49e61b04bfb",
+        "objectId": "6a23ac64e50cc49e61b04c09",
+        "stateHash": "0xd341c47e6fb2095cdc0fad6858830843f45fcf101053a2e56682c9ee62ca97d3",
+        "integrityHash": "0x93e7f9462bad4a136116333cde5775303267ce6d60df50f232ed15d8f9190b0e",
+        "readbackVerified": true,
+        "mintedAt": "2026-06-06T05:13:14.222Z"
       }
     }
   ]
