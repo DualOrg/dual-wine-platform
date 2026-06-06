@@ -1,0 +1,127 @@
+{
+  "app": "dual-wine-platform",
+  "version": "2026-06-mainnet-content-v1",
+  "updatedAt": "2026-06-06T00:00:00.000Z",
+  "network": {
+    "target": "mainnet",
+    "apiUrl": "https://api.dual.network/",
+    "orgId": "6a1a927534603174374c8ecf"
+  },
+  "template": {
+    "env": "DUAL_TEMPLATE_ID",
+    "slug": "io.dual.examples.wine.production.v1",
+    "name": "DUAL Wine Provenance Production v1",
+    "description": "Production wine objects for the official DUAL Wine Provenance example.",
+    "actions": ["harvest", "barrel_age", "bottle", "ship", "sell", "verify"]
+  },
+  "objects": [
+    {
+      "contentId": "dual-wine-barossa-shiraz-2021",
+      "metadata": {
+        "name": "Penfold Ridge Barossa Shiraz 2021",
+        "description": "Single-vineyard Barossa Shiraz with custody milestones from harvest to cellar.",
+        "image": { "url": "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=1200&q=80" }
+      },
+      "custom": {
+        "name": "Penfold Ridge Barossa Shiraz 2021",
+        "producer": "Penfold Ridge Estate",
+        "region": "Barossa Valley",
+        "country": "Australia",
+        "vintage": 2021,
+        "varietal": "Shiraz",
+        "type": "red",
+        "abv": 14.5,
+        "volume": "750ml",
+        "quantity": 12,
+        "condition": "pristine",
+        "storage": "bonded_warehouse",
+        "drinkingWindow": { "from": 2028, "to": 2042 },
+        "ratings": [{ "critic": "Dual Cellar Panel", "score": 96, "year": 2026 }],
+        "certifications": ["producer certificate", "bonded custody", "temperature log"],
+        "currentValue": 9600,
+        "purchasePrice": 7200,
+        "description": "A production-grade provenance object covering vineyard source, barrel ageing, bottling, custody, and buyer verification.",
+        "tastingNotes": {
+          "nose": "blackberry, graphite, cedar",
+          "palate": "dense black fruit, fine tannin, spice",
+          "finish": "long mineral finish"
+        },
+        "imageUrl": "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=1200&q=80",
+        "liveContentId": "dual-wine-barossa-shiraz-2021",
+        "contentVersion": "2026-06-mainnet-content-v1"
+      }
+    },
+    {
+      "contentId": "dual-wine-margaret-river-chardonnay-2022",
+      "metadata": {
+        "name": "Leeuwin Coast Chardonnay 2022",
+        "description": "Margaret River Chardonnay with producer, cellar, distributor, and retail chain of custody.",
+        "image": { "url": "https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?w=1200&q=80" }
+      },
+      "custom": {
+        "name": "Leeuwin Coast Chardonnay 2022",
+        "producer": "Leeuwin Coast",
+        "region": "Margaret River",
+        "country": "Australia",
+        "vintage": 2022,
+        "varietal": "Chardonnay",
+        "type": "white",
+        "abv": 13.2,
+        "volume": "750ml",
+        "quantity": 18,
+        "condition": "excellent",
+        "storage": "professional",
+        "drinkingWindow": { "from": 2026, "to": 2034 },
+        "ratings": [{ "critic": "Dual Cellar Panel", "score": 94, "year": 2026 }],
+        "certifications": ["producer certificate", "cold-chain custody", "retail scan"],
+        "currentValue": 5400,
+        "purchasePrice": 4320,
+        "description": "A white-wine provenance object designed to demonstrate harvest, bottling, distribution, and consumer verification.",
+        "tastingNotes": {
+          "nose": "lemon curd, white peach, flint",
+          "palate": "citrus, cashew, fine acidity",
+          "finish": "clean saline finish"
+        },
+        "imageUrl": "https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?w=1200&q=80",
+        "liveContentId": "dual-wine-margaret-river-chardonnay-2022",
+        "contentVersion": "2026-06-mainnet-content-v1"
+      }
+    },
+    {
+      "contentId": "dual-wine-tasmania-sparkling-2018",
+      "metadata": {
+        "name": "Derwent Crown Sparkling 2018",
+        "description": "Tasmanian sparkling wine with disgorgement and storage proof.",
+        "image": { "url": "https://images.unsplash.com/photo-1547595628-c61a29f496f0?w=1200&q=80" }
+      },
+      "custom": {
+        "name": "Derwent Crown Sparkling 2018",
+        "producer": "Derwent Crown",
+        "region": "Tasmania",
+        "country": "Australia",
+        "vintage": 2018,
+        "varietal": "Chardonnay Pinot Noir",
+        "type": "sparkling",
+        "abv": 12.4,
+        "volume": "750ml",
+        "quantity": 24,
+        "condition": "excellent",
+        "storage": "professional",
+        "drinkingWindow": { "from": 2025, "to": 2032 },
+        "ratings": [{ "critic": "Dual Cellar Panel", "score": 95, "year": 2026 }],
+        "certifications": ["tirage record", "disgorgement proof", "cellar custody"],
+        "currentValue": 7200,
+        "purchasePrice": 6000,
+        "description": "A sparkling-wine object showing how lifecycle stages can be enforced and verified from tirage to consumer scan.",
+        "tastingNotes": {
+          "nose": "green apple, brioche, sea spray",
+          "palate": "fine bead, citrus, almond",
+          "finish": "bright and persistent"
+        },
+        "imageUrl": "https://images.unsplash.com/photo-1547595628-c61a29f496f0?w=1200&q=80",
+        "liveContentId": "dual-wine-tasmania-sparkling-2018",
+        "contentVersion": "2026-06-mainnet-content-v1"
+      }
+    }
+  ]
+}

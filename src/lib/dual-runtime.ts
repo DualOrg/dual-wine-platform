@@ -1,3 +1,5 @@
+import { getProductionContentStatus } from "./production-content";
+
 const MAINNET_API_URL = "https://api.dual.network/";
 const MAINNET_CONSOLE_URL = "https://console.dual.network/";
 const MAINNET_L3_EXPLORER_URL = "https://explorer.dual.network/";
@@ -18,6 +20,7 @@ function hasValue(value: string | undefined): boolean {
 }
 
 export function getDualRuntimeStatus() {
+  const content = getProductionContentStatus();
   const apiUrl = cleanUrl(process.env.NEXT_PUBLIC_DUAL_API_URL || process.env.DUAL_API_URL, MAINNET_API_URL);
   const consoleUrl = cleanUrl(process.env.NEXT_PUBLIC_DUAL_CONSOLE_BASE_URL, MAINNET_CONSOLE_URL);
   const l3ExplorerUrl = cleanUrl(process.env.NEXT_PUBLIC_DUAL_L3_EXPLORER_BASE_URL, MAINNET_L3_EXPLORER_URL);
@@ -55,6 +58,7 @@ export function getDualRuntimeStatus() {
     write_allowed: writeAllowed,
     readbackReady: credentialConfigured && templateIds.length > 0,
     mainnetMappingPending: !credentialConfigured || templateIds.length === 0,
+    content,
     blockers: [
       ...(!credentialConfigured ? ["hosted_dual_credentials_not_configured"] : []),
       ...(templateIds.length === 0 ? ["production_wine_template_mapping_pending"] : []),

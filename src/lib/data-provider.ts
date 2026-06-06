@@ -18,6 +18,7 @@ import type {
   PropertyType,
 } from "@/types/dual";
 import { isDualConfigured, getDualClient } from "./dual-client";
+import { getProductionWines } from "./production-content";
 import { v4 as uuidv4 } from "uuid";
 
 // ─── Blockscout Resolver ───
@@ -292,8 +293,13 @@ function mapGatewayToProperty(obj: any): Property {
 
 class DualDataProvider implements DataProvider {
   async listWines(): Promise<Wine[]> {
+    const fallbackWines = getProductionWines();
+    if (!isDualConfigured() || !process.env.DUAL_TEMPLATE_ID) {
+      return fallbackWines;
+    }
+
     const client = getDualClient();
-    const result = await client.objects.listObjects({ limit: 100, template_id: process.env.DUAL_TEMPLATE_ID || undefined });
+    const result = await client.objects.listObjects({ limit: 100, template_id: process.env.DUAL_TEMPLATE_ID || undefined }).catch(() => null);
     const objects = result?.objects || result?.data || [];
     // Filter out orphaned/empty tokens: must have custom.name and a real owner (not null address or padded wallet)
     const validObjects = (objects as any[]).filter((obj: any) => {
@@ -333,14 +339,19 @@ class DualDataProvider implements DataProvider {
       }
     } catch { /* Blockscout enrichment failed — links stay as-is */ }
 
-    return wines;
+    return wines.length > 0 ? wines : fallbackWines;
   }
 
   async getWine(id: string): Promise<Wine | null> {
+    const fallback = getProductionWines().find((wine) => wine.id === id || wine.objectId === id);
+    if (!isDualConfigured() || !process.env.DUAL_TEMPLATE_ID) {
+      return fallback || null;
+    }
+
     try {
       const client = getDualClient();
       const obj = await client.objects.getObject(id);
-      if (!obj) return null;
+      if (!obj) return fallback || null;
       const wine = mapGatewayToWine(obj as any);
       // Resolve Blockscout links for this single wine
       try {
@@ -360,7 +371,7 @@ class DualDataProvider implements DataProvider {
       } catch { /* Blockscout enrichment failed */ }
       return wine;
     } catch {
-      return null;
+      return fallback || null;
     }
   }
 

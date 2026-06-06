@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "seed:mainnet:dry-run": "node scripts/seed-mainnet-content.mjs --dry-run",
+    "seed:mainnet:execute": "node scripts/seed-mainnet-content.mjs --execute"
   },
   "dependencies": {
     "@google/genai": "^1.46.0",
